@@ -1,0 +1,57 @@
+## .NET / C#
+
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.vspscc
+*.vssscc
+
+# Rider
+.idea/
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Publish output
+publish/
+**/publish/
+
+# MSTest
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# ASP.NET
+App_Data/
+
+# Secrets / sensitive
+appsettings.Development.json
+appsettings.Local.json
+*.pfx
+*.p12
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

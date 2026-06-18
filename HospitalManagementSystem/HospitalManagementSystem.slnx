@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="HMS.Application/HMS.Application.csproj" Id="534c4864-373b-4287-b9c8-1897e5a3d0c8" />
+    <Project Path="HMS.Domain/HMS.Domain.csproj" Id="0796aa07-eb51-42bc-a0df-f7bcdca0c5af" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="HMS.Infrastructure/HMS.Infrastructure.csproj" Id="5c708b5b-cd9a-4a3b-9b2d-7e0a50937fbf" />
+    <Project Path="HMS.Persistence/HMS.Persistence.csproj" Id="576fdeee-a744-4470-8ca3-66a53a1b116f" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="HMS.API/HMS.API.csproj" Id="7e7c939e-8696-4cd0-8be6-dddca744c1ba" />
+  </Folder>
+</Solution>
