@@ -102,7 +102,7 @@ export default function DoctorDischarge() {
                 <SelectContent>{mockPatients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Admission Date</Label><Input type="date" {...register('admissionDate', { required: true })} /></div>
               <div className="space-y-1.5"><Label>Discharge Date</Label><Input type="date" {...register('dischargeDate', { required: true })} /></div>
             </div>

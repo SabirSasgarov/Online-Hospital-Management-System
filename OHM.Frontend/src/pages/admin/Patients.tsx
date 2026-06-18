@@ -144,7 +144,7 @@ export default function AdminPatients() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Register New Patient</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit(onAdd)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Full Name</Label>
                 <Input {...register('name', { required: true })} placeholder="John Doe" />

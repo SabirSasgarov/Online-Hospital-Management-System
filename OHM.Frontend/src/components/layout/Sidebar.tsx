@@ -2,9 +2,10 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, UserCog, Calendar, BedDouble,
   FileText, Pill, TestTube, MessageSquare, BarChart3,
-  ClipboardList, LogOut, Hospital, Activity
+  ClipboardList, LogOut, Hospital, Activity, X
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSidebar } from '@/contexts/SidebarContext'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
@@ -66,6 +67,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export function Sidebar() {
   const { user, logout } = useAuth()
+  const { close } = useSidebar()
   if (!user) return null
 
   const items = navItems[user.role]
@@ -77,10 +79,17 @@ export function Sidebar() {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
           <Hospital className="h-6 w-6 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-bold text-white">OHM System</p>
           <p className="text-xs text-white/70">{roleLabels[user.role]}</p>
         </div>
+        <button
+          onClick={close}
+          className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20 lg:hidden"
+          aria-label="Close menu"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="border-b border-gray-100 p-4">

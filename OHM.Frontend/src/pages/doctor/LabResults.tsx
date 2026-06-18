@@ -89,7 +89,7 @@ export default function LabResults() {
               </Select>
             </div>
             <div className="space-y-1.5"><Label>Test Name</Label><Input {...register('testName', { required: true })} placeholder="e.g. HbA1c, CBC" /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Result</Label><Input {...register('result', { required: true })} placeholder="7.2%" /></div>
               <div className="space-y-1.5"><Label>Normal Range</Label><Input {...register('normalRange')} placeholder="<5.7%" /></div>
             </div>

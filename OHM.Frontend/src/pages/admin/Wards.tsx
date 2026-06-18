@@ -164,7 +164,7 @@ export default function AdminWards() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Total Beds</Label><Input type="number" min="1" {...register('totalBeds', { required: true })} /></div>
               <div className="space-y-1.5"><Label>Floor</Label><Input type="number" min="1" {...register('floor', { required: true })} /></div>
             </div>

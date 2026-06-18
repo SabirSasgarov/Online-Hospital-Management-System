@@ -103,7 +103,7 @@ export default function PatientAppointments() {
                 <SelectContent>{mockDoctors.map(d => <SelectItem key={d.id} value={d.id}>{d.name} — {d.specialization}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Date</Label><Input type="date" {...register('date', { required: true })} /></div>
               <div className="space-y-1.5"><Label>Time</Label><Input type="time" {...register('time', { required: true })} /></div>
             </div>
