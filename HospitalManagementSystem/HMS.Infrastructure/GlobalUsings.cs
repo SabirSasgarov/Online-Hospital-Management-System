@@ -1,1 +1,20 @@
-﻿
+﻿global using Google.Apis.Auth;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using HMS.Infrastructure.Settings;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using System.Security.Cryptography;
+global using System.Text;
+//global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Tokens;
+global using HMS.Application.Common.Interfaces;
+global using HMS.Domain.Entities;
+//global using HMS.Infrastructure.Settings;
+global using MailKit.Net.Smtp;
+global using MailKit.Security;
+global using MimeKit;
+global using HMS.Infrastructure.Templates;
+global using HMS.Infrastructure.Services;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
