@@ -1,1 +1,1 @@
-﻿
+﻿global using HMS.Domain.Entities;
