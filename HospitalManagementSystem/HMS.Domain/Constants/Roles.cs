@@ -3,8 +3,8 @@
 	public static class Roles
 	{
 		public const string Admin = "Admin";
-		public const string Doctor = "Admin";
-		public const string Nurse = "Admin";
-		public const string Patient = "Admin";
+		public const string Doctor = "Doctor";
+		public const string Nurse = "Nurse";
+		public const string Patient = "Patient";
 	}
 }

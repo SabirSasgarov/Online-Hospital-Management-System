@@ -1,4 +1,8 @@
 using HMS.API;
+using HMS.Application;
+using HMS.Infrastructure;
+using HMS.Persistence;
+using HMS.Persistence.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +21,11 @@ builder.Services.AddCors(options =>
 	});
 });
 
-builder.Services.AddPresentation(builder.Configuration);
+builder.Services
+	.AddApplication()
+	.AddInfrastructure(builder.Configuration)
+	.AddPersistence(builder.Configuration)
+	.AddPresentation(builder.Configuration);
 
 var app = builder.Build();
 
@@ -42,5 +50,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await HMS.Persistence.DependencyInjection.ApplyMigrationsAsync(app.Services);
+using (var scope = app.Services.CreateScope())
+{
+	await UserAndRoleSeeds.SeedAsync(scope.ServiceProvider);
+}
 
 app.Run();
