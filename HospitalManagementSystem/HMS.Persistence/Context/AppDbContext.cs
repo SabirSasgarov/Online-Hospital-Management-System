@@ -5,11 +5,19 @@
 		IdentityUserClaim<Guid>, IdentityUserRole<Guid>, IdentityUserLogin<Guid>,
 		IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>(options), IAppDbContext
 	{
-
-
-
-
-
+		public DbSet<Patient> Patients => Set<Patient>();
+		public DbSet<Doctor> Doctors => Set<Doctor>();
+		public DbSet<Appointment> Appointments => Set<Appointment>();
+		public DbSet<Ward> Wards => Set<Ward>();
+		public DbSet<Room> Rooms => Set<Room>();
+		public DbSet<Bed> Beds => Set<Bed>();
+		public DbSet<Visit> Visits => Set<Visit>();
+		public DbSet<Prescription> Prescriptions => Set<Prescription>();
+		public DbSet<LabResult> LabResults => Set<LabResult>();
+		public DbSet<DischargeSummary> DischargeSummaries => Set<DischargeSummary>();
+		public DbSet<Message> Messages => Set<Message>();
+		public DbSet<Notification> Notifications => Set<Notification>();
+		public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
 
 

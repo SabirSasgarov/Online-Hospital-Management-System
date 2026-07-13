@@ -54,7 +54,13 @@ app.MapControllers();
 await HMS.Persistence.DependencyInjection.ApplyMigrationsAsync(app.Services);
 using (var scope = app.Services.CreateScope())
 {
-	await UserAndRoleSeeds.SeedAsync(scope.ServiceProvider);
+	var sp = scope.ServiceProvider;
+	// with oredered seeding to avoid foreign key constraint issues
+	await UserAndRoleSeeds.SeedAsync(sp);    // 1. Roles + base users (admin, nurse)
+	await DoctorSeeds.SeedAsync(sp);         // 2. Doctor users + Doctor profiles + schedules
+	await PatientSeeds.SeedAsync(sp);        // 3. Patient users + Patient profiles
+	await WardSeeds.SeedAsync(sp);           // 4. Wards → Rooms → Beds
+	await ClinicalDataSeeds.SeedAsync(sp);   // 5. Appointments, Visits, Prescriptions, Labs, Messages
 }
 
 app.Run();

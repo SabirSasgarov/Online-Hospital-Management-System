@@ -23,7 +23,7 @@ public static class EmailTemplates
 <title>Password Reset</title>{BaseStyle}</head>
 <body>
   <div class=""container"">
-    <div class=""header""><h1>Hospital Management System</h1></div>
+    <div class=""header""><h1>CareFlow</h1></div>
     <div class=""body"">
       <p>Hello <strong>{userName}</strong>,</p>
       <p>We received a request to reset your password. Use the code below to set a new password:</p>
@@ -40,10 +40,10 @@ public static class EmailTemplates
         return $@"<!DOCTYPE html>
 <html lang=""en"">
 <head><meta charset=""UTF-8""/><meta name=""viewport"" content=""width=device-width, initial-scale=1.0""/>
-<title>Welcome to Phantoms</title>{BaseStyle}</head>
+<title>Welcome to CareFlow</title>{BaseStyle}</head>
 <body>
   <div class=""container"">
-    <div class=""header""><h1>Welcome to Hospital Management System</h1></div>
+    <div class=""header""><h1>Welcome to CareFLow</h1></div>
     <div class=""body"">
       <p>Hello <strong>{userName}</strong>,</p>
       <p>Your account has been successfully created!</p>
