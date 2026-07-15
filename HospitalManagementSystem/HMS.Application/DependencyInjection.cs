@@ -1,23 +1,26 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
+using HMS.Application.Common.Behaviours;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HMS.Application
 {
-	public static class DependencyInjection
-	{
-		public static IServiceCollection AddApplication(this IServiceCollection services)
-		{
-		//	var assembly = Assembly.GetExecutingAssembly();
+    public static class DependencyInjection
+    {
+        public static IServiceCollection AddApplication(this IServiceCollection services)
+        {
+            var assembly = typeof(DependencyInjection).Assembly;
 
-		//	services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
-		//	services.AddAutoMapper(assembly);
+            services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(assembly);
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            });
 
-		//	// Auto-discover and register all AbstractValidator<T> implementations
-		//	services.AddValidatorsFromAssembly(assembly);
+            services.AddAutoMapper(assembly);
 
-		//	// Wire the validation pipeline: every MediatR request goes through validation first
-		//	services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            services.AddValidatorsFromAssembly(assembly);
 
-			return services;
-		}
-	}
+            return services;
+        }
+    }
 }

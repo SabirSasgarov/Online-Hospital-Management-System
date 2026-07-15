@@ -13,6 +13,7 @@
 		public DbSet<Bed> Beds => Set<Bed>();
 		public DbSet<Visit> Visits => Set<Visit>();
 		public DbSet<Prescription> Prescriptions => Set<Prescription>();
+		public DbSet<PrescriptionMedication> PrescriptionMedications => Set<PrescriptionMedication>();
 		public DbSet<LabResult> LabResults => Set<LabResult>();
 		public DbSet<DischargeSummary> DischargeSummaries => Set<DischargeSummary>();
 		public DbSet<Message> Messages => Set<Message>();
