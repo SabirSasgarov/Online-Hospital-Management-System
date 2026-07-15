@@ -1,5 +1,3 @@
-using HMS.Domain.Common;
-
 namespace HMS.Domain.Entities
 {
     public class DischargeSummary : AuditableEntity
@@ -20,6 +18,5 @@ namespace HMS.Domain.Entities
 
         // The diagnosis and treatment come from the Visit; no need to duplicate them here.
         // Medications come from Prescriptions linked to the Visit.
-        // If you ever need a PDF snapshot, generate it from Visit + Prescriptions at download time.
     }
 }

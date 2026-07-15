@@ -1,5 +1,3 @@
-using HMS.Domain.Common;
-
 namespace HMS.Domain.Entities
 {
     public class DoctorSchedule : BaseEntity
@@ -7,7 +5,7 @@ namespace HMS.Domain.Entities
         public Guid DoctorId { get; set; }
         public Doctor Doctor { get; set; } = null!;
 
-        // 0 = Sunday ... 6 = Saturday  (maps to System.DayOfWeek)
+        // 0 = Sunday ... 6 = Saturday
         public DayOfWeek Day { get; set; }
 
         public TimeOnly StartTime { get; set; }

@@ -1,6 +1,3 @@
-using HMS.Domain.Common;
-using HMS.Domain.Enums;
-
 namespace HMS.Domain.Entities
 {
     public class Prescription : AuditableEntity

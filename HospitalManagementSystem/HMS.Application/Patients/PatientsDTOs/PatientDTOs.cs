@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace HMS.Application.Patients.PatientsDTOs
+﻿namespace HMS.Application.Patients.PatientsDTOs
 {
 	public class CreatePatientDto
 	{

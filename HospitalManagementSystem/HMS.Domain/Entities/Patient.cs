@@ -1,6 +1,3 @@
-using HMS.Domain.Common;
-using HMS.Domain.Enums;
-
 namespace HMS.Domain.Entities
 {
     public class Patient : AuditableEntity
@@ -17,17 +14,14 @@ namespace HMS.Domain.Entities
         public string Address { get; set; } = string.Empty;
         public string EmergencyContactName { get; set; } = string.Empty;
         public string EmergencyContactPhone { get; set; } = string.Empty;
-
-        // Medical profile — stored as comma-separated strings for simplicity.
-        // If you need to query by condition later, switch to owned collections.
+        // Medical conditions and allergies
         public string Conditions { get; set; } = string.Empty;   // e.g. "Hypertension,Diabetes Type 2"
         public string Allergies { get; set; } = string.Empty;    // e.g. "Penicillin,Sulfa drugs"
 
-        // Navigation
         public ICollection<Appointment> Appointments { get; set; } = [];
         public ICollection<Visit> Visits { get; set; } = [];
         public ICollection<Prescription> Prescriptions { get; set; } = [];
         public ICollection<LabResult> LabResults { get; set; } = [];
-        public ICollection<Bed> OccupiedBeds { get; set; } = [];
+        public Bed? CurrentBed { get; set; }  // null when not admitted
     }
 }

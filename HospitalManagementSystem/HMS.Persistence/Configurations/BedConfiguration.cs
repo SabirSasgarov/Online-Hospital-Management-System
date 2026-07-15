@@ -1,7 +1,3 @@
-using HMS.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace HMS.Persistence.Configurations
 {
     public class BedConfiguration : IEntityTypeConfiguration<Bed>
@@ -15,10 +11,10 @@ namespace HMS.Persistence.Configurations
                    .HasForeignKey(b => b.RoomId)
                    .OnDelete(DeleteBehavior.Cascade); // deleting a room removes its beds
 
-            // Nullable patient assignment
+            // One to one: a patient occupies at most one bed
             builder.HasOne(b => b.Patient)
-                   .WithMany(p => p.OccupiedBeds)
-                   .HasForeignKey(b => b.PatientId)
+                   .WithOne(p => p.CurrentBed)
+                   .HasForeignKey<Bed>(b => b.PatientId)
                    .IsRequired(false)
                    .OnDelete(DeleteBehavior.SetNull); // discharging/deleting patient frees the bed
 

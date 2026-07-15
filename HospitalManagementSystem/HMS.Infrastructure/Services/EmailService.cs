@@ -1,6 +1,4 @@
-﻿
-
-namespace HMS.Infrastructure.Services
+﻿namespace HMS.Infrastructure.Services
 {
 	public class EmailService(IOptions<SmtpSettings> smtpOptions) : IEmailService
 	{

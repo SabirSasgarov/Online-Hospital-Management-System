@@ -1,5 +1,3 @@
-using HMS.Domain.Common;
-
 namespace HMS.Domain.Entities
 {
     public class AuditLog : BaseEntity

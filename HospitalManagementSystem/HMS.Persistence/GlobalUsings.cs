@@ -6,3 +6,4 @@ global using Microsoft.EntityFrameworkCore;
 global using HMS.Domain.Constants;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;

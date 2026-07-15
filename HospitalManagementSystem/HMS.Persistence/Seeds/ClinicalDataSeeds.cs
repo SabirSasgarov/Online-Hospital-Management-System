@@ -36,22 +36,22 @@ namespace HMS.Persistence.Seeds
                     return;
                 }
 
-                // Helper lookups
-                Doctor Doc(string firstName) => doctors.First(d => d.User.FirstName == firstName);
-                Patient Pat(string firstName) => patients.First(p => p.User.FirstName == firstName);
+                // Helper lookups — use email so they work even if FirstName wasn't set by UserAndRoleSeeds
+                Doctor Doc(string email) => doctors.First(d => d.User.Email == email);
+                Patient Pat(string email) => patients.First(p => p.User.Email == email);
 
-                var drJames   = Doc("James");
-                var drMaria   = Doc("Maria");
-                var drKevin   = Doc("Kevin");
-                var drLisa    = Doc("Lisa");
-                var drAhmed   = Doc("Ahmed");
+                var drJames   = Doc("doctor@hms.com");
+                var drMaria   = Doc("maria.santos@hms.com");
+                var drKevin   = Doc("kevin.park@hms.com");
+                var drLisa    = Doc("lisa.brown@hms.com");
+                var drAhmed   = Doc("ahmed.hassan@hms.com");
 
-                var emily     = Pat("Emily");
-                var michael   = Pat("Michael");
-                var sarah     = Pat("Sarah");
-                var robert    = Pat("Robert");
-                var jennifer  = Pat("Jennifer");
-                var david     = Pat("David");
+                var emily     = Pat("patient@hms.com");
+                var michael   = Pat("michael.chen@hms.com");
+                var sarah     = Pat("sarah.williams@hms.com");
+                var robert    = Pat("robert.garcia@hms.com");
+                var jennifer  = Pat("jennifer.martinez@hms.com");
+                var david     = Pat("david.thompson@hms.com");
 
                 var now = DateTime.UtcNow;
 
