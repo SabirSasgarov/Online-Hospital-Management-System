@@ -1,5 +1,4 @@
 using FluentValidation;
-using HMS.Application.Common.Exceptions;
 using ValidationException = HMS.Application.Common.Exceptions.ValidationException;
 
 namespace HMS.Application.Common.Behaviours

@@ -1,5 +1,3 @@
-using HMS.Persistence.Context;
-
 namespace HMS.Persistence.Seeds
 {
     /// <summary>

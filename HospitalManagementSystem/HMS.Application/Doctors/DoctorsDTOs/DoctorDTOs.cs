@@ -5,12 +5,11 @@ namespace HMS.Application.Doctors.DoctorsDTOs
     public class DoctorScheduleDto
     {
         public Guid Id { get; set; }
-        public string Day { get; set; } = string.Empty;      // "Monday"
+        public string Day { get; set; } = string.Empty; 
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }
     }
 
-    /// <summary>Compact row for list/search results.</summary>
     public class DoctorSummaryDto
     {
         public Guid Id { get; set; }
@@ -25,7 +24,6 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public DateTime CreatedAt { get; set; }
     }
 
-    /// <summary>Full profile returned by GET /doctor/{id}.</summary>
     public class DoctorDto : DoctorSummaryDto
     {
         public List<DoctorScheduleDto> Schedules { get; set; } = [];
@@ -35,7 +33,6 @@ namespace HMS.Application.Doctors.DoctorsDTOs
 
     // ── Request DTOs ─────────────────────────────────────────────────────────
 
-    /// <summary>Admin creates a new doctor account + profile.</summary>
     public class CreateDoctorDto
     {
         public string FirstName { get; set; } = string.Empty;
@@ -55,7 +52,6 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public TimeOnly EndTime { get; set; }
     }
 
-    /// <summary>Admin/doctor updates basic info.</summary>
     public class UpdateDoctorDto
     {
         public string FirstName { get; set; } = string.Empty;
@@ -64,13 +60,11 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public string Specialization { get; set; } = string.Empty;
     }
 
-    /// <summary>Replaces the full schedule for a doctor.</summary>
     public class UpdateDoctorScheduleDto
     {
         public List<CreateDoctorScheduleDto> Schedules { get; set; } = [];
     }
 
-    /// <summary>Toggles availability flag.</summary>
     public class UpdateDoctorAvailabilityDto
     {
         public bool IsAvailable { get; set; }

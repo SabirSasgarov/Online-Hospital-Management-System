@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace HMS.Application.Common.Interfaces
 {
     public interface IAppDbContext

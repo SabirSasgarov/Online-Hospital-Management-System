@@ -1,12 +1,8 @@
-﻿using HMS.API.Authorization;
-using HMS.API.Middleware;
+﻿using HMS.API.Middleware;
 using HMS.API.Services;
-using HMS.Domain.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 using System.Threading.RateLimiting;
 

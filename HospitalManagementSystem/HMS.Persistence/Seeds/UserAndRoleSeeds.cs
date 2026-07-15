@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-
-namespace HMS.Persistence.Seeds
+﻿namespace HMS.Persistence.Seeds
 {
 	public static class UserAndRoleSeeds
 	{

@@ -7,3 +7,7 @@ global using HMS.Domain.Constants;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using HMS.Domain.Enums;
+global using HMS.Persistence.Context;
+global using System.Security.Claims;
+global using Microsoft.Extensions.Configuration;

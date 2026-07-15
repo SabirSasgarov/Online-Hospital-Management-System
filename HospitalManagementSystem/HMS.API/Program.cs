@@ -1,9 +1,3 @@
-using HMS.API;
-using HMS.Application;
-using HMS.Infrastructure;
-using HMS.Persistence;
-using HMS.Persistence.Seeds;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

@@ -1,11 +1,4 @@
-﻿using HMS.Domain.Entities;
-using HMS.Persistence.Context;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace HMS.Persistence
+﻿namespace HMS.Persistence
 {
 	public static class DependencyInjection
 	{

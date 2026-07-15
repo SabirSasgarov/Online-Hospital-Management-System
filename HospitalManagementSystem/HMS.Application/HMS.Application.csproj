@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Appointments\Commands\" />
+    <Folder Include="Appointments\Validators\" />
     <Folder Include="Common\Exceptions\" />
   </ItemGroup>
 

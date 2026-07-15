@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace HMS.API.Controllers
+﻿namespace HMS.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]

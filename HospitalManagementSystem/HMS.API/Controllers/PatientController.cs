@@ -1,11 +1,6 @@
-using HMS.API.Authorization;
 using HMS.Application.Patients.Commands;
 using HMS.Application.Patients.PatientsDTOs;
 using HMS.Application.Patients.Queries;
-using HMS.Domain.Constants;
-using MediatR;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 
 namespace HMS.API.Controllers
 {

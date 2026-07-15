@@ -1,6 +1,5 @@
 using HMS.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using ValidationException = HMS.Application.Common.Exceptions.ValidationException;
 
 namespace HMS.API.Middleware

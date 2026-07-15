@@ -1,6 +1,3 @@
-using HMS.Domain.Enums;
-using HMS.Persistence.Context;
-
 namespace HMS.Persistence.Seeds
 {
     /// <summary>

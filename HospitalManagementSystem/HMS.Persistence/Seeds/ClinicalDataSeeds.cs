@@ -1,8 +1,3 @@
-using HMS.Domain.Entities;
-using HMS.Domain.Enums;
-using HMS.Persistence.Context;
-using Microsoft.AspNetCore.Identity;
-
 namespace HMS.Persistence.Seeds
 {
     /// <summary>

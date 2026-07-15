@@ -1,8 +1,3 @@
-using HMS.Domain.Entities;
-using HMS.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace HMS.Persistence.Configurations
 {
     public class PatientConfiguration : IEntityTypeConfiguration<Patient>

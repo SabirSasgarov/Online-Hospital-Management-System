@@ -1,4 +1,3 @@
-using AutoMapper;
 using HMS.Application.Doctors.DoctorsDTOs;
 
 namespace HMS.Application.Common.Mappings

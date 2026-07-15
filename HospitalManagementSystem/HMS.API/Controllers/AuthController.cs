@@ -1,15 +1,4 @@
-﻿using HMS.Application.Auth.AuthDTOs;
-using HMS.Application.Models;
-using HMS.Domain.Constants;
-using HMS.Domain.Entities;
-using HMS.Infrastructure.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-
-namespace HMS.API.Controllers
+﻿namespace HMS.API.Controllers
 {
 	[EnableRateLimiting("auth")]
 	public class AuthController(

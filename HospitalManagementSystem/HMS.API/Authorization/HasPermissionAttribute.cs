@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-
-namespace HMS.API.Authorization
+﻿namespace HMS.API.Authorization
 {
 	public class HasPermissionAttribute(string permission) : AuthorizeAttribute(policy: permission)
 	{
