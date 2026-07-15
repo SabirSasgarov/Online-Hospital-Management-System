@@ -43,6 +43,7 @@ app.UseSwaggerUI(c =>
 if (!app.Environment.IsProduction())
 	app.UseHttpsRedirection();
 
+app.UseExceptionHandler();
 app.UseCors();
 app.UseRateLimiter();
 

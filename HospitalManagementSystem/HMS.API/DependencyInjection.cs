@@ -1,4 +1,5 @@
 ﻿using HMS.API.Authorization;
+using HMS.API.Middleware;
 using HMS.API.Services;
 using HMS.Domain.Constants;
 using Microsoft.AspNetCore.Authentication;
@@ -23,7 +24,7 @@ namespace HMS.API
 			services.AddControllers();
 
 			// Global exception handling – returns clean JSON for ALL unhandled exceptions
-			//services.AddExceptionHandler<GlobalExceptionHandler>();
+			services.AddExceptionHandler<GlobalExceptionHandler>();
 			services.AddProblemDetails();
 			// Rate Limiting – prevents DDoS and spam abuse
 			services.AddRateLimiter(options =>

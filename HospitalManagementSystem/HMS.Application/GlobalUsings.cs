@@ -1,1 +1,10 @@
-﻿global using HMS.Domain.Entities;
+global using HMS.Domain.Entities;
+global using HMS.Domain.Enums;
+global using HMS.Domain.Constants;
+global using HMS.Application.Models;
+global using HMS.Application.Common.Interfaces;
+global using HMS.Application.Common.Exceptions;
+global using AutoMapper;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.AspNetCore.Identity;

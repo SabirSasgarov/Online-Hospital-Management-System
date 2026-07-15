@@ -1,0 +1,5 @@
+namespace HMS.Application.Common.Exceptions
+{
+    public class UnauthorizedException(string message = "Authentication is required.")
+        : Exception(message);
+}

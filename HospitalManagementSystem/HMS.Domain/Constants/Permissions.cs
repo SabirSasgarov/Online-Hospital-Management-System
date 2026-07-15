@@ -29,6 +29,7 @@
 		public static class Doctors
 		{
 			public const string View = "Permissions.Doctors.View";
+			public const string Search = "Permissions.Doctors.Search";
 			public const string Create = "Permissions.Doctors.Create";
 			public const string Edit = "Permissions.Doctors.Edit";
 			public const string Delete = "Permissions.Doctors.Delete";
@@ -66,6 +67,8 @@
 		public static class Beds
 		{
 			public const string View = "Permissions.Beds.View";
+			public const string Create = "Permissions.Beds.Create";
+			public const string Delete = "Permissions.Beds.Delete";
 			public const string EditStatus = "Permissions.Beds.EditStatus";
 			public const string AssignPatient = "Permissions.Beds.AssignPatient";
 			public const string Release = "Permissions.Beds.Release";
@@ -76,6 +79,7 @@
 			public const string View = "Permissions.Visits.View";
 			public const string Create = "Permissions.Visits.Create";
 			public const string Edit = "Permissions.Visits.Edit";
+			public const string Delete = "Permissions.Visits.Delete";
 			public const string Admit = "Permissions.Visits.Admit";
 			public const string Discharge = "Permissions.Visits.Discharge";
 		}
@@ -101,6 +105,8 @@
 		{
 			public const string View = "Permissions.DischargeSummaries.View";
 			public const string Create = "Permissions.DischargeSummaries.Create";
+			public const string Edit = "Permissions.DischargeSummaries.Edit";
+			public const string Delete = "Permissions.DischargeSummaries.Delete";
 			public const string DownloadPdf = "Permissions.DischargeSummaries.DownloadPdf";
 		}
 
@@ -109,12 +115,14 @@
 			public const string View = "Permissions.Messages.View";
 			public const string Send = "Permissions.Messages.Send";
 			public const string MarkAsRead = "Permissions.Messages.MarkAsRead";
+			public const string Delete = "Permissions.Messages.Delete";
 		}
 
 		public static class Notifications
 		{
 			public const string View = "Permissions.Notifications.View";
 			public const string MarkAsRead = "Permissions.Notifications.MarkAsRead";
+			public const string Delete = "Permissions.Notifications.Delete";
 			public const string ManagePreferences = "Permissions.Notifications.ManagePreferences";
 			public const string RunAppointmentReminders = "Permissions.Notifications.RunAppointmentReminders";
 		}
