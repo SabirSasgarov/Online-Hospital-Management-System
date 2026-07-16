@@ -2,6 +2,7 @@ namespace HMS.Application.Common.Interfaces
 {
     public interface IAppDbContext
     {
+        DbSet<AppUser> Users { get; }
         DbSet<Patient> Patients { get; }
         DbSet<Doctor> Doctors { get; }
         DbSet<Appointment> Appointments { get; }

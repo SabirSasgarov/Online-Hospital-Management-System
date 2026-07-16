@@ -5,6 +5,7 @@
 		IdentityUserClaim<Guid>, IdentityUserRole<Guid>, IdentityUserLogin<Guid>,
 		IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>(options), IAppDbContext
 	{
+		public DbSet<AppUser> Users => Set<AppUser>();
 		public DbSet<Patient> Patients => Set<Patient>();
 		public DbSet<Doctor> Doctors => Set<Doctor>();
 		public DbSet<Appointment> Appointments => Set<Appointment>();
