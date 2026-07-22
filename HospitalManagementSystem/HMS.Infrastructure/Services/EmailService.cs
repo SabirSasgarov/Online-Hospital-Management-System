@@ -34,6 +34,11 @@ namespace HMS.Infrastructure.Services
             => SendEmailAsync(toEmail, toName, "Your CareFlow Password Reset Code",
                 EmailTemplates.PasswordResetCode(toName, code), cancellationToken);
 
+        public Task SendEmailConfirmationCodeAsync(string toEmail, string toName, string code,
+            CancellationToken cancellationToken = default)
+            => SendEmailAsync(toEmail, toName, "Confirm Your CareFlow Email",
+                EmailTemplates.EmailConfirmationCode(toName, code), cancellationToken);
+
         public Task SendAccountCreatedEmailAsync(string toEmail, string toName, string tempPassword,
             CancellationToken cancellationToken = default)
             => SendEmailAsync(toEmail, toName, "Your CareFlow Account Has Been Created",

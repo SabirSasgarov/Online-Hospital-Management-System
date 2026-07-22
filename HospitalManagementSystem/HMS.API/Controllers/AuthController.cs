@@ -8,22 +8,53 @@
 		IJwtService jwtService,
 		IEmailService emailService,
 		GoogleTokenValidator googleTokenValidator,
+		IAppDbContext db,
 		IConfiguration configuration) : BaseApiController
 		{
+		private static string GenerateCode() => Random.Shared.Next(100000, 999999).ToString();
+
+		/// <summary>
+		/// Self-registration only creates the AppUser + login — but the app also needs a matching
+		/// Patient profile record (DateOfBirth/Gender/etc.) for appointments, prescriptions, and lab
+		/// results to be scoped to this specific person instead of showing up empty or (previously)
+		/// falling back to someone else's data. Create an empty placeholder Patient row now; the
+		/// patient can fill in the real details later from their profile.
+		/// </summary>
+		private async Task CreatePatientProfileAsync(AppUser user, CancellationToken ct)
+		{
+			db.Patients.Add(new Patient
+			{
+				UserId = user.Id,
+				DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow),
+				Gender = Gender.Other,
+				BloodType = string.Empty,
+				Phone = string.Empty,
+				Address = string.Empty,
+				EmergencyContactName = string.Empty,
+				EmergencyContactPhone = string.Empty,
+				Conditions = string.Empty,
+				Allergies = string.Empty,
+			});
+			await db.SaveChangesAsync(ct);
+		}
+
 		[HttpPost("register")]
-		public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+		public async Task<IActionResult> Register([FromBody] RegisterDto registerDto, CancellationToken ct)
 		{
 			if (!ModelState.IsValid)
 			{
 				return BadRequest(ModelState);
 			}
+			var code = GenerateCode();
 			var user = new AppUser
 			{
 				UserName = registerDto.Email,
 				Email = registerDto.Email,
 				FirstName = registerDto.FirstName,
 				LastName = registerDto.LastName,
-				EmailConfirmed = true
+				EmailConfirmed = false,
+				EmailConfirmationCode = code,
+				EmailConfirmationCodeExpiry = DateTime.UtcNow.AddMinutes(15),
 			};
 			var result = await userManager.CreateAsync(user, registerDto.Password);
 			if (!result.Succeeded)
@@ -35,8 +66,53 @@
 				return BadRequest(ModelState);
 			}
 			await userManager.AddToRoleAsync(user, Roles.Patient);
+			await CreatePatientProfileAsync(user, ct);
+			_ = emailService.SendEmailConfirmationCodeAsync(user.Email!, $"{user.FirstName} {user.LastName}", code);
+			return Ok(Result.Success("Account created. Check your email for a confirmation code."));
+		}
+
+		[HttpPost("confirm-email")]
+		public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+		{
+			var user = await userManager.FindByEmailAsync(dto.Email);
+			if (user is null)
+				return BadRequest(Result.Failure("Invalid email or code."));
+
+			if (user.EmailConfirmed)
+				return Ok(Result.Success("Email already confirmed."));
+
+			if (user.EmailConfirmationCode is null ||
+				user.EmailConfirmationCodeExpiry is null ||
+				user.EmailConfirmationCode != dto.Code ||
+				user.EmailConfirmationCodeExpiry < DateTime.UtcNow)
+				return BadRequest(Result.Failure("Invalid or expired confirmation code."));
+
+			user.EmailConfirmed = true;
+			user.EmailConfirmationCode = null;
+			user.EmailConfirmationCodeExpiry = null;
+			await userManager.UpdateAsync(user);
+
 			_ = emailService.SendWelcomeEmailAsync(user.Email!, $"{user.FirstName} {user.LastName}");
-			return Ok(new { Message = "User registered successfully" });
+			return Ok(Result.Success("Email confirmed. You can now log in."));
+		}
+
+		[HttpPost("resend-confirmation")]
+		public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto dto)
+		{
+			var user = await userManager.FindByEmailAsync(dto.Email);
+			if (user is null)
+				return Ok(Result.Success("If the account exists and needs confirmation, a new code has been sent."));
+
+			if (user.EmailConfirmed)
+				return Ok(Result.Success("Email already confirmed."));
+
+			var code = GenerateCode();
+			user.EmailConfirmationCode = code;
+			user.EmailConfirmationCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+			await userManager.UpdateAsync(user);
+
+			_ = emailService.SendEmailConfirmationCodeAsync(user.Email!, $"{user.FirstName} {user.LastName}", code);
+			return Ok(Result.Success("If the account exists and needs confirmation, a new code has been sent."));
 		}
 
 		[HttpPost("login")]
@@ -49,7 +125,10 @@
 			var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
 			if (!result.Succeeded)
 				return Unauthorized(Result.Failure("Invalid credentials."));
-			
+
+			if (!user.EmailConfirmed)
+				return Unauthorized(Result.Failure("Please confirm your email before logging in."));
+
 			if(roleManager.Roles.Any())
 			{
 				var roles = await userManager.GetRolesAsync(user);
@@ -79,7 +158,7 @@
 		}
 
 		[HttpPost("google-signin")]
-		public async Task<IActionResult> GoogleSignIn([FromBody] GoogleSignInDto dto)
+		public async Task<IActionResult> GoogleSignIn([FromBody] GoogleSignInDto dto, CancellationToken ct)
 		{
 			if (string.IsNullOrWhiteSpace(dto.IdToken))
 				return BadRequest(Result.Failure("Google ID token is required."));
@@ -106,6 +185,7 @@
 					return BadRequest(Result.Failure(createResult.Errors.Select(e => e.Description)));
 
 				await userManager.AddToRoleAsync(user, Roles.Patient);
+				await CreatePatientProfileAsync(user, ct);
 				_ = emailService.SendWelcomeEmailAsync(user.Email!, $"{user.FirstName} {user.LastName}");
 			}
 

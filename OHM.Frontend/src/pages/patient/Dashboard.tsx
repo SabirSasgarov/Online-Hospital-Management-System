@@ -3,24 +3,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/contexts/AuthContext'
-import { mockAppointments, mockPrescriptions, mockLabResults, mockMessages } from '@/lib/mockData'
+import { usePatientDashboard } from '@/hooks/useDashboard'
+import { usePrescriptions } from '@/hooks/usePrescriptions'
+import { useLabResults } from '@/hooks/useLabResults'
+import { apiAppointmentStatusToUi, toDateInput, toTimeInput } from '@/lib/adapters'
 
 export default function PatientDashboard() {
   const { user } = useAuth()
-  const myApts = mockAppointments.filter(a => a.patientId === user?.id)
-  const myRx = mockPrescriptions.filter(p => p.patientId === user?.id)
-  const myLabs = mockLabResults.filter(l => l.patientId === user?.id)
-  const unreadMsgs = mockMessages.filter(m => m.receiverId === user?.id && !m.read)
+  const { data: dashboard, isLoading } = usePatientDashboard(user?.profileId)
+  const { data: rxData } = usePrescriptions({ patientId: user?.profileId, status: 'Active', pageSize: 20 })
+  const { data: labData } = useLabResults({ patientId: user?.profileId, pageSize: 50 })
 
-  const upcoming = myApts.filter(a => a.status === 'scheduled')
-  const activeRx = myRx.filter(r => r.status === 'active')
-  const abnormal = myLabs.filter(l => l.status !== 'normal')
+  const activeRx = rxData?.prescriptions ?? []
+  const abnormal = (labData?.labResults ?? []).filter(l => l.status !== 'normal')
+
+  if (isLoading || !dashboard) {
+    return (
+      <div>
+        <PageHeader title={`Hello, ${user?.name}`} description="Your health overview and upcoming activities" />
+        <div className="p-6 text-sm text-gray-400">Loading your dashboard…</div>
+      </div>
+    )
+  }
 
   const stats = [
-    { label: 'Upcoming Appointments', value: upcoming.length, icon: Calendar, color: 'bg-blue-500' },
-    { label: 'Active Prescriptions', value: activeRx.length, icon: Pill, color: 'bg-teal-500' },
-    { label: 'Lab Results', value: myLabs.length, icon: TestTube, color: 'bg-purple-500' },
-    { label: 'Unread Messages', value: unreadMsgs.length, icon: MessageSquare, color: 'bg-amber-500' },
+    { label: 'Upcoming Appointments', value: dashboard.upcomingAppointments, icon: Calendar, color: 'bg-blue-500' },
+    { label: 'Active Prescriptions', value: dashboard.activePrescriptions, icon: Pill, color: 'bg-teal-500' },
+    { label: 'Unread Messages', value: dashboard.unreadMessages, icon: MessageSquare, color: 'bg-amber-500' },
+    { label: 'Unread Notifications', value: dashboard.unreadNotifications, icon: TestTube, color: 'bg-purple-500' },
   ]
 
   return (
@@ -45,23 +55,23 @@ export default function PatientDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle className="text-base">Upcoming Appointments</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Next Appointment</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {upcoming.length === 0 ? (
+              {!dashboard.nextAppointment ? (
                 <p className="py-6 text-center text-sm text-gray-400">No upcoming appointments</p>
-              ) : upcoming.map(apt => (
-                <div key={apt.id} className="flex items-center gap-3 rounded-lg border border-gray-100 p-3">
+              ) : (
+                <div className="flex items-center gap-3 rounded-lg border border-gray-100 p-3">
                   <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-blue-50">
-                    <span className="text-xs font-bold text-blue-600">{new Date(apt.date).toLocaleDateString('en', { month: 'short' })}</span>
-                    <span className="text-base font-bold text-blue-900 leading-none">{new Date(apt.date).getDate()}</span>
+                    <span className="text-xs font-bold text-blue-600">{new Date(dashboard.nextAppointment.scheduledAt).toLocaleDateString('en', { month: 'short' })}</span>
+                    <span className="text-base font-bold text-blue-900 leading-none">{new Date(dashboard.nextAppointment.scheduledAt).getDate()}</span>
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{apt.doctorName}</p>
-                    <p className="text-xs text-gray-500">{apt.time} · {apt.type}</p>
+                    <p className="font-medium text-gray-900">{dashboard.nextAppointment.doctorName}</p>
+                    <p className="text-xs text-gray-500">{toDateInput(dashboard.nextAppointment.scheduledAt)} {toTimeInput(dashboard.nextAppointment.scheduledAt)} · {dashboard.nextAppointment.type}</p>
                   </div>
-                  <Badge variant="info">{apt.status}</Badge>
+                  <Badge variant="info">{apiAppointmentStatusToUi[dashboard.nextAppointment.status] ?? 'scheduled'}</Badge>
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 

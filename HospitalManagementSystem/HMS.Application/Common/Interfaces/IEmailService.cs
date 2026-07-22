@@ -13,6 +13,9 @@ namespace HMS.Application.Common.Interfaces
         Task SendPasswordResetCodeEmailAsync(string toEmail, string toName, string code,
             CancellationToken cancellationToken = default);
 
+        Task SendEmailConfirmationCodeAsync(string toEmail, string toName, string code,
+            CancellationToken cancellationToken = default);
+
         Task SendAccountCreatedEmailAsync(string toEmail, string toName, string tempPassword,
             CancellationToken cancellationToken = default);
 

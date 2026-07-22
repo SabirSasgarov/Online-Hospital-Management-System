@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { mockAuditLogs } from '@/lib/mockData'
+import { useAuditLogs } from '@/hooks/useAuditLogs'
 import type { AuditLog } from '@/types'
 
 const actionVariant: Record<string, string> = {
@@ -24,6 +24,8 @@ const roleVariant: Record<string, string> = {
 
 export default function AdminAuditLog() {
   const [globalFilter, setGlobalFilter] = useState('')
+  const { data, isLoading } = useAuditLogs({ pageSize: 200 })
+  const logs = data?.logs ?? []
 
   const columns: ColumnDef<AuditLog>[] = [
     { accessorKey: 'timestamp', header: 'Time', cell: ({ row }) => <span className="text-xs text-gray-500">{new Date(row.original.timestamp).toLocaleString()}</span> },
@@ -35,7 +37,7 @@ export default function AdminAuditLog() {
     { accessorKey: 'ipAddress', header: 'IP Address', cell: ({ row }) => <span className="font-mono text-xs text-gray-400">{row.original.ipAddress}</span> },
   ]
 
-  const table = useReactTable({ data: mockAuditLogs, columns, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(), state: { globalFilter }, onGlobalFilterChange: setGlobalFilter })
+  const table = useReactTable({ data: logs, columns, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(), state: { globalFilter }, onGlobalFilterChange: setGlobalFilter })
 
   return (
     <div>
@@ -48,7 +50,7 @@ export default function AdminAuditLog() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input placeholder="Filter by user, action, resource..." className="pl-9" value={globalFilter} onChange={e => setGlobalFilter(e.target.value)} />
               </div>
-              <Badge variant="secondary">{mockAuditLogs.length} entries</Badge>
+              <Badge variant="secondary">{logs.length} entries</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -77,6 +79,7 @@ export default function AdminAuditLog() {
                   ))}
                 </tbody>
               </table>
+              {isLoading && <div className="py-12 text-center text-sm text-gray-400">Loading audit log…</div>}
             </div>
           </CardContent>
         </Card>

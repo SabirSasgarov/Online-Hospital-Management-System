@@ -15,18 +15,18 @@ interface FormData {
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { adminLogin } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>()
 
   const onSubmit = async (data: FormData) => {
     setError('')
-    const ok = await login(data.email, data.password, 'admin')
-    if (ok) {
+    const result = await adminLogin(data.email, data.password)
+    if (result.ok) {
       navigate('/admin')
     } else {
-      setError('Invalid credentials. Use admin@hospital.com / admin123')
+      setError(result.message ?? 'Invalid credentials.')
     }
   }
 
@@ -76,7 +76,7 @@ export default function AdminLogin() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@hospital.com"
+                    placeholder="admin@hms.com"
                     {...register('email', { required: 'Email is required' })}
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
@@ -112,12 +112,6 @@ export default function AdminLogin() {
                   {isSubmitting ? 'Signing in...' : 'Sign In as Admin'}
                 </Button>
               </form>
-
-              <div className="mt-4 rounded-lg bg-purple-50 border border-purple-100 p-3">
-                <p className="text-xs font-medium text-purple-700 mb-1">Demo credentials</p>
-                <p className="text-xs text-purple-600">Email: admin@hospital.com</p>
-                <p className="text-xs text-purple-600">Password: admin123</p>
-              </div>
 
               <p className="mt-4 text-center text-sm text-gray-500">
                 Not an admin?{' '}

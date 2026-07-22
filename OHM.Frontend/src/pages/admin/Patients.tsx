@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Plus, Search, Eye, Edit, Trash2 } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, AlertCircle } from 'lucide-react'
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, type ColumnDef } from '@tanstack/react-table'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { mockPatients } from '@/lib/mockData'
+import { usePatients, usePatient, useCreatePatient, useDeletePatient, type PatientFormInput } from '@/hooks/usePatients'
+import { ApiError } from '@/lib/apiClient'
 import type { Patient } from '@/types'
 
 const statusVariant: Record<string, string> = {
@@ -19,15 +20,36 @@ const statusVariant: Record<string, string> = {
   discharged: 'secondary',
 }
 
+interface FormValues {
+  fullName: string
+  email: string
+  password: string
+  dateOfBirth: string
+  gender: Patient['gender']
+  bloodType: string
+  phone: string
+  address: string
+  emergencyContactName: string
+  emergencyContactPhone: string
+  conditions: string
+  allergies: string
+}
+
 export default function AdminPatients() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients)
   const [globalFilter, setGlobalFilter] = useState('')
   const [showAdd, setShowAdd] = useState(false)
-  const [viewPatient, setViewPatient] = useState<Patient | null>(null)
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Partial<Patient>>()
+  const [viewPatientId, setViewPatientId] = useState<string | null>(null)
+  const [formError, setFormError] = useState('')
+
+  const { data, isLoading } = usePatients({ pageSize: 200 })
+  const { data: viewPatient } = usePatient(viewPatientId ?? undefined)
+  const createPatient = useCreatePatient()
+  const deletePatient = useDeletePatient()
+
+  const patients = data?.patients ?? []
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
   const columns: ColumnDef<Patient>[] = [
-    { accessorKey: 'id', header: 'ID', size: 80 },
     { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-medium text-gray-900">{row.original.name}</span> },
     { accessorKey: 'gender', header: 'Gender', cell: ({ row }) => <span className="capitalize">{row.original.gender}</span> },
     { accessorKey: 'bloodType', header: 'Blood Type', size: 100 },
@@ -55,9 +77,12 @@ export default function AdminPatients() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setViewPatient(row.original)}><Eye className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => setPatients(p => p.filter(x => x.id !== row.original.id))}>
+          <Button variant="ghost" size="icon" onClick={() => setViewPatientId(row.original.id)}><Eye className="h-4 w-4" /></Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => { if (confirm(`Remove ${row.original.name}?`)) deletePatient.mutate(row.original.id) }}
+          >
             <Trash2 className="h-4 w-4 text-red-400" />
           </Button>
         </div>
@@ -67,25 +92,31 @@ export default function AdminPatients() {
 
   const table = useReactTable({ data: patients, columns, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(), state: { globalFilter }, onGlobalFilterChange: setGlobalFilter })
 
-  const onAdd = (data: Partial<Patient>) => {
-    const newP: Patient = {
-      id: `P${String(patients.length + 1).padStart(3, '0')}`,
-      name: data.name ?? '',
-      dateOfBirth: data.dateOfBirth ?? '',
-      gender: (data.gender as Patient['gender']) ?? 'male',
-      bloodType: data.bloodType ?? '',
-      phone: data.phone ?? '',
-      email: data.email ?? '',
-      address: data.address ?? '',
-      emergencyContact: data.emergencyContact ?? '',
-      conditions: [],
-      allergies: [],
-      registeredAt: new Date().toISOString().split('T')[0],
-      status: 'active',
+  const onAdd = async (data: FormValues) => {
+    setFormError('')
+    const [firstName, ...rest] = data.fullName.trim().split(' ')
+    const input: PatientFormInput = {
+      firstName: firstName || data.fullName,
+      lastName: rest.join(' ') || '-',
+      email: data.email,
+      password: data.password,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+      bloodType: data.bloodType,
+      phone: data.phone,
+      address: data.address,
+      emergencyContactName: data.emergencyContactName,
+      emergencyContactPhone: data.emergencyContactPhone,
+      conditions: data.conditions ? data.conditions.split(',').map(s => s.trim()).filter(Boolean) : [],
+      allergies: data.allergies ? data.allergies.split(',').map(s => s.trim()).filter(Boolean) : [],
     }
-    setPatients(p => [...p, newP])
-    setShowAdd(false)
-    reset()
+    try {
+      await createPatient.mutateAsync(input)
+      setShowAdd(false)
+      reset()
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to register patient.')
+    }
   }
 
   return (
@@ -93,7 +124,7 @@ export default function AdminPatients() {
       <PageHeader
         title="Patient Management"
         description="Register and manage patient profiles"
-        action={<Button onClick={() => setShowAdd(true)}><Plus className="h-4 w-4" /> Add Patient</Button>}
+        action={<Button onClick={() => { setShowAdd(true); setFormError('') }}><Plus className="h-4 w-4" /> Add Patient</Button>}
       />
       <div className="p-6">
         <Card>
@@ -132,9 +163,10 @@ export default function AdminPatients() {
                   ))}
                 </tbody>
               </table>
-              {table.getRowModel().rows.length === 0 && (
+              {!isLoading && table.getRowModel().rows.length === 0 && (
                 <div className="py-12 text-center text-sm text-gray-400">No patients found</div>
               )}
+              {isLoading && <div className="py-12 text-center text-sm text-gray-400">Loading patients…</div>}
             </div>
           </CardContent>
         </Card>
@@ -147,8 +179,7 @@ export default function AdminPatients() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Full Name</Label>
-                <Input {...register('name', { required: true })} placeholder="John Doe" />
-                {errors.name && <p className="text-xs text-red-500">Required</p>}
+                <Input {...register('fullName', { required: true })} placeholder="John Doe" />
               </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>
@@ -180,26 +211,47 @@ export default function AdminPatients() {
               </div>
               <div className="space-y-1.5">
                 <Label>Email</Label>
-                <Input type="email" {...register('email')} placeholder="patient@email.com" />
+                <Input type="email" {...register('email', { required: true })} placeholder="patient@email.com" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Temporary Password</Label>
+                <Input type="password" {...register('password', { required: true })} placeholder="Passw0rd!" />
               </div>
               <div className="col-span-2 space-y-1.5">
                 <Label>Address</Label>
                 <Input {...register('address')} placeholder="123 Main St, City" />
               </div>
+              <div className="space-y-1.5">
+                <Label>Emergency Contact Name</Label>
+                <Input {...register('emergencyContactName')} placeholder="Jane Doe" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Emergency Contact Phone</Label>
+                <Input {...register('emergencyContactPhone')} placeholder="+1-555-0000" />
+              </div>
               <div className="col-span-2 space-y-1.5">
-                <Label>Emergency Contact</Label>
-                <Input {...register('emergencyContact')} placeholder="Name + Phone" />
+                <Label>Conditions (comma-separated, optional)</Label>
+                <Input {...register('conditions')} placeholder="Hypertension, Diabetes Type 2" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>Allergies (comma-separated, optional)</Label>
+                <Input {...register('allergies')} placeholder="Penicillin" />
               </div>
             </div>
+            {formError && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {formError}
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Register Patient</Button>
+              <Button type="submit" disabled={createPatient.isPending}>{createPatient.isPending ? 'Registering…' : 'Register Patient'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewPatient} onOpenChange={() => setViewPatient(null)}>
+      <Dialog open={!!viewPatientId} onOpenChange={() => setViewPatientId(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Patient Profile</DialogTitle></DialogHeader>
           {viewPatient && (
@@ -210,7 +262,7 @@ export default function AdminPatients() {
                 </div>
                 <div>
                   <p className="text-lg font-semibold text-gray-900">{viewPatient.name}</p>
-                  <p className="text-sm text-gray-500">ID: {viewPatient.id} · DOB: {viewPatient.dateOfBirth}</p>
+                  <p className="text-sm text-gray-500">DOB: {viewPatient.dateOfBirth}</p>
                   <Badge variant={statusVariant[viewPatient.status] as 'success' | 'info' | 'secondary'}>{viewPatient.status}</Badge>
                 </div>
               </div>
@@ -227,11 +279,11 @@ export default function AdminPatients() {
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">Address</p>
-                <p className="text-sm text-gray-700">{viewPatient.address}</p>
+                <p className="text-sm text-gray-700">{viewPatient.address || '—'}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">Emergency Contact</p>
-                <p className="text-sm text-gray-700">{viewPatient.emergencyContact}</p>
+                <p className="text-sm text-gray-700">{viewPatient.emergencyContact || '—'}</p>
               </div>
               {viewPatient.conditions.length > 0 && (
                 <div>

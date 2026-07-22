@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pill, X } from 'lucide-react'
+import { Plus, Pill, X, AlertCircle } from 'lucide-react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -10,12 +10,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { mockPrescriptions, mockPatients } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePrescriptions, useCreatePrescription } from '@/hooks/usePrescriptions'
+import { useVisits } from '@/hooks/useVisits'
+import { ApiError } from '@/lib/apiClient'
 import type { Prescription } from '@/types'
 
 interface FormData {
-  patientId: string
+  visitId: string
   notes: string
   medications: { name: string; dosage: string; frequency: string; duration: string; instructions: string }[]
 }
@@ -24,31 +26,42 @@ const statusVariant: Record<string, string> = { active: 'success', completed: 's
 
 export default function DoctorPrescriptions() {
   const { user } = useAuth()
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(mockPrescriptions.filter(p => p.doctorId === user?.id))
   const [showAdd, setShowAdd] = useState(false)
   const [view, setView] = useState<Prescription | null>(null)
+  const [formError, setFormError] = useState('')
+
+  const { data, isLoading } = usePrescriptions({ doctorId: user?.profileId, pageSize: 200 })
+  const { data: visitsData } = useVisits({ doctorId: user?.profileId, status: 'Ongoing', pageSize: 100 })
+  const createPrescription = useCreatePrescription()
+
+  const prescriptions = data?.prescriptions ?? []
+  const visits = visitsData?.visits ?? []
+
   const { register, handleSubmit, reset, setValue, control } = useForm<FormData>({
     defaultValues: { medications: [{ name: '', dosage: '', frequency: '', duration: '', instructions: '' }] }
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'medications' })
 
-  const onAdd = (data: FormData) => {
-    const patient = mockPatients.find(p => p.id === data.patientId)
-    const pr: Prescription = {
-      id: `PR${String(prescriptions.length + 100).padStart(3, '0')}`,
-      patientId: data.patientId,
-      patientName: patient?.name ?? '',
-      doctorId: user?.id ?? '',
-      doctorName: user?.name ?? '',
-      visitId: `V${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      status: 'active',
-      medications: data.medications,
-      notes: data.notes,
+  const onAdd = async (data: FormData) => {
+    setFormError('')
+    const visit = visits.find(v => v.id === data.visitId)
+    if (!visit || !user?.profileId) {
+      setFormError('Please select a visit.')
+      return
     }
-    setPrescriptions(p => [...p, pr])
-    setShowAdd(false)
-    reset()
+    try {
+      await createPrescription.mutateAsync({
+        visitId: visit.id,
+        patientId: visit.patientId,
+        doctorId: user.profileId,
+        notes: data.notes,
+        medications: data.medications,
+      })
+      setShowAdd(false)
+      reset()
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to issue prescription.')
+    }
   }
 
   return (
@@ -56,9 +69,11 @@ export default function DoctorPrescriptions() {
       <PageHeader
         title="Prescriptions"
         description="Manage prescriptions linked to patient visits"
-        action={<Button onClick={() => setShowAdd(true)}><Plus className="h-4 w-4" /> New Prescription</Button>}
+        action={<Button onClick={() => { setShowAdd(true); setFormError('') }}><Plus className="h-4 w-4" /> New Prescription</Button>}
       />
       <div className="p-6 space-y-4">
+        {isLoading && <p className="text-sm text-gray-400">Loading prescriptions…</p>}
+        {!isLoading && prescriptions.length === 0 && <p className="py-12 text-center text-sm text-gray-400">No prescriptions yet</p>}
         {prescriptions.map(pr => (
           <Card key={pr.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView(pr)}>
             <CardContent className="p-4">
@@ -89,11 +104,14 @@ export default function DoctorPrescriptions() {
           <DialogHeader><DialogTitle>New Prescription</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit(onAdd)} className="space-y-5">
             <div className="space-y-1.5">
-              <Label>Patient</Label>
-              <Select onValueChange={v => setValue('patientId', v)}>
-                <SelectTrigger><SelectValue placeholder="Select patient" /></SelectTrigger>
-                <SelectContent>{mockPatients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+              <Label>Patient Visit</Label>
+              <Select onValueChange={v => setValue('visitId', v)}>
+                <SelectTrigger><SelectValue placeholder="Select an ongoing visit" /></SelectTrigger>
+                <SelectContent>
+                  {visits.map(v => <SelectItem key={v.id} value={v.id}>{v.patientName} — {v.diagnosis || 'No diagnosis yet'} ({v.admissionDate})</SelectItem>)}
+                </SelectContent>
               </Select>
+              {visits.length === 0 && <p className="text-xs text-gray-400">You have no ongoing visits to prescribe against.</p>}
             </div>
 
             <div>
@@ -127,9 +145,15 @@ export default function DoctorPrescriptions() {
               <Textarea {...register('notes')} placeholder="Additional notes for the patient..." />
             </div>
 
+            {formError && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {formError}
+              </div>
+            )}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Issue Prescription</Button>
+              <Button type="submit" disabled={createPrescription.isPending}>{createPrescription.isPending ? 'Issuing…' : 'Issue Prescription'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

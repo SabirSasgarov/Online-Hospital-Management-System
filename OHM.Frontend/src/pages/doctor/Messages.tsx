@@ -1,19 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { mockMessages } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Message } from '@/types'
+import { useMessages, useSendMessage, useMarkThreadAsRead } from '@/hooks/useMessages'
 import { cn } from '@/lib/utils'
 
 export default function DoctorMessages() {
   const { user } = useAuth()
-  const [messages, setMessages] = useState<Message[]>(mockMessages)
   const [selected, setSelected] = useState<string | null>(null)
   const [newMsg, setNewMsg] = useState('')
+
+  const { data: messages = [] } = useMessages()
+  const sendMessage = useSendMessage()
+  const markThreadAsRead = useMarkThreadAsRead()
 
   const conversations = Array.from(
     new Set(messages.filter(m => m.senderId === user?.id || m.receiverId === user?.id).map(m => m.senderId === user?.id ? m.receiverId : m.senderId))
@@ -21,25 +23,30 @@ export default function DoctorMessages() {
     const conv = messages.filter(m => (m.senderId === pid && m.receiverId === user?.id) || (m.senderId === user?.id && m.receiverId === pid))
     const last = conv[conv.length - 1]
     const unread = conv.filter(m => m.receiverId === user?.id && !m.read).length
-    return { personId: pid, personName: last.senderId === pid ? last.senderName : last.receiverName, lastMessage: last.content, timestamp: last.timestamp, unread }
+    return { personId: pid, personName: last.senderId === pid ? last.senderName : last.receiverName, lastMessage: last.content, unread }
   })
 
-  const thread = messages.filter(m => (m.senderId === selected && m.receiverId === user?.id) || (m.senderId === user?.id && m.receiverId === selected))
+  // Oldest first so the conversation reads top-to-bottom, newest message at the bottom (standard chat UX).
+  const thread = messages
+    .filter(m => (m.senderId === selected && m.receiverId === user?.id) || (m.senderId === user?.id && m.receiverId === selected))
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+
+  const threadEndRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ block: 'end' })
+  }, [selected, thread.length])
+
+  const openConversation = (personId: string) => {
+    setSelected(personId)
+    const unreadIds = messages
+      .filter(m => m.senderId === personId && m.receiverId === user?.id && !m.read)
+      .map(m => m.id)
+    if (unreadIds.length > 0) markThreadAsRead.mutate(unreadIds)
+  }
 
   const send = () => {
     if (!newMsg.trim() || !selected) return
-    const conv = conversations.find(c => c.personId === selected)
-    const msg: Message = {
-      id: `M${Date.now()}`,
-      senderId: user?.id ?? '',
-      senderName: user?.name ?? '',
-      receiverId: selected,
-      receiverName: conv?.personName ?? '',
-      content: newMsg,
-      timestamp: new Date().toISOString(),
-      read: false,
-    }
-    setMessages(m => [...m, msg])
+    sendMessage.mutate({ receiverId: selected, content: newMsg })
     setNewMsg('')
   }
 
@@ -51,7 +58,7 @@ export default function DoctorMessages() {
           {conversations.map(c => (
             <button
               key={c.personId}
-              onClick={() => setSelected(c.personId)}
+              onClick={() => openConversation(c.personId)}
               className={cn('w-full text-left p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors', selected === c.personId && 'bg-blue-50')}
             >
               <div className="flex items-center gap-3">
@@ -89,6 +96,7 @@ export default function DoctorMessages() {
                     </div>
                   </div>
                 ))}
+                <div ref={threadEndRef} />
               </div>
               <div className="border-t border-gray-200 bg-white p-3 flex gap-2">
                 <Input

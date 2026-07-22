@@ -75,6 +75,12 @@ namespace HMS.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmailConfirmationCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmailConfirmationCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
@@ -110,6 +116,15 @@ namespace HMS.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PasswordResetCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PendingEmail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PendingEmailCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PendingEmailCodeExpiry")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhoneNumber")

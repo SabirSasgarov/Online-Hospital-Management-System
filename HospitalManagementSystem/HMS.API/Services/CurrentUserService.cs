@@ -9,6 +9,10 @@
 
 		public string? UserName => _user?.FindFirstValue(ClaimTypes.Name);
 
+		public string? Role => _user?.FindFirstValue(ClaimTypes.Role);
+
+		public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+
 		public bool IsAuthenticated => _user?.Identity?.IsAuthenticated ?? false;
 	}
 

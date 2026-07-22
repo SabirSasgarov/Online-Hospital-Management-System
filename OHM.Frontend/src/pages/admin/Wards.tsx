@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BedDouble, Plus, Edit } from 'lucide-react'
+import { BedDouble, Plus, AlertCircle } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,27 +10,35 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useForm } from 'react-hook-form'
-import { mockWards, mockRooms } from '@/lib/mockData'
-import type { Ward, Room } from '@/types'
+import { useWards, useCreateWard } from '@/hooks/useFacilities'
+import { useAllRoomsWithBeds } from '@/hooks/useFacilities'
+import { ApiError } from '@/lib/apiClient'
+
+interface FormValues {
+  name: string
+  type: string
+  floor: string
+}
 
 export default function AdminWards() {
-  const [wards, setWards] = useState<Ward[]>(mockWards)
-  const [rooms] = useState<Room[]>(mockRooms)
   const [showAdd, setShowAdd] = useState(false)
-  const { register, handleSubmit, reset, setValue } = useForm<Partial<Ward>>()
+  const [formError, setFormError] = useState('')
+  const { data: wardsData, isLoading } = useWards({ pageSize: 200 })
+  const { data: rooms = [] } = useAllRoomsWithBeds()
+  const createWard = useCreateWard()
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
-  const onAdd = (data: Partial<Ward>) => {
-    const w: Ward = {
-      id: `W${String(wards.length + 1).padStart(3, '0')}`,
-      name: data.name ?? '',
-      type: data.type ?? '',
-      totalBeds: Number(data.totalBeds) ?? 0,
-      occupiedBeds: 0,
-      floor: Number(data.floor) ?? 1,
+  const wards = wardsData?.wards ?? []
+
+  const onAdd = async (data: FormValues) => {
+    setFormError('')
+    try {
+      await createWard.mutateAsync({ name: data.name, type: data.type, floor: Number(data.floor) || 1 })
+      setShowAdd(false)
+      reset()
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to create ward.')
     }
-    setWards(prev => [...prev, w])
-    setShowAdd(false)
-    reset()
   }
 
   const totalBeds = wards.reduce((a, w) => a + w.totalBeds, 0)
@@ -41,7 +49,7 @@ export default function AdminWards() {
       <PageHeader
         title="Wards & Bed Management"
         description="Monitor and manage hospital wards, rooms, and bed availability"
-        action={<Button onClick={() => setShowAdd(true)}><Plus className="h-4 w-4" /> Add Ward</Button>}
+        action={<Button onClick={() => { setShowAdd(true); setFormError('') }}><Plus className="h-4 w-4" /> Add Ward</Button>}
       />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
@@ -64,6 +72,8 @@ export default function AdminWards() {
           ))}
         </div>
 
+        {isLoading && <p className="text-sm text-gray-400">Loading wards…</p>}
+
         <Tabs defaultValue="wards">
           <TabsList>
             <TabsTrigger value="wards">Wards</TabsTrigger>
@@ -73,13 +83,12 @@ export default function AdminWards() {
           <TabsContent value="wards">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {wards.map(ward => {
-                const pct = Math.round((ward.occupiedBeds / ward.totalBeds) * 100)
+                const pct = ward.totalBeds > 0 ? Math.round((ward.occupiedBeds / ward.totalBeds) * 100) : 0
                 return (
                   <Card key={ward.id}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base">{ward.name}</CardTitle>
-                        <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
                       </div>
                       <p className="text-xs text-gray-500">{ward.type} · Floor {ward.floor}</p>
                     </CardHeader>
@@ -165,12 +174,17 @@ export default function AdminWards() {
               </Select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label>Total Beds</Label><Input type="number" min="1" {...register('totalBeds', { required: true })} /></div>
               <div className="space-y-1.5"><Label>Floor</Label><Input type="number" min="1" {...register('floor', { required: true })} /></div>
             </div>
+            <p className="text-xs text-gray-400">Rooms and beds are added separately once the ward exists.</p>
+            {formError && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {formError}
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Add Ward</Button>
+              <Button type="submit" disabled={createWard.isPending}>{createWard.isPending ? 'Adding…' : 'Add Ward'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Search } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { mockAppointments } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAppointments, useChangeAppointmentStatus } from '@/hooks/useAppointments'
 import type { Appointment } from '@/types'
 
 const statusVariant: Record<string, string> = { scheduled: 'info', completed: 'success', cancelled: 'destructive', 'no-show': 'warning' }
@@ -13,10 +14,14 @@ const typeColor: Record<string, string> = { consultation: 'bg-blue-50 text-blue-
 
 export default function DoctorAppointments() {
   const { user } = useAuth()
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments.filter(a => a.doctorId === user?.id))
+  const [search, setSearch] = useState('')
+  const { data, isLoading } = useAppointments({ doctorId: user?.profileId, pageSize: 200 })
+  const changeStatus = useChangeAppointmentStatus()
 
-  const update = (id: string, status: Appointment['status']) => setAppointments(a => a.map(x => x.id === id ? { ...x, status } : x))
-
+  const q = search.trim().toLowerCase()
+  const appointments = (data?.appointments ?? []).filter(a =>
+    !q || a.patientName.toLowerCase().includes(q) || a.type.toLowerCase().includes(q) || (a.notes ?? '').toLowerCase().includes(q)
+  )
   const scheduled = appointments.filter(a => a.status === 'scheduled')
   const completed = appointments.filter(a => a.status === 'completed')
   const cancelled = appointments.filter(a => a.status !== 'scheduled' && a.status !== 'completed')
@@ -38,8 +43,8 @@ export default function DoctorAppointments() {
         <Badge variant={statusVariant[apt.status] as 'info' | 'success' | 'destructive' | 'warning'}>{apt.status}</Badge>
         {apt.status === 'scheduled' && (
           <div className="flex gap-1">
-            <Button size="icon" variant="ghost" className="h-7 w-7 text-green-500 hover:text-green-600" onClick={() => update(apt.id, 'completed')}><CheckCircle className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:text-red-500" onClick={() => update(apt.id, 'cancelled')}><XCircle className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-green-500 hover:text-green-600" onClick={() => changeStatus.mutate({ id: apt.id, status: 'completed' })}><CheckCircle className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:text-red-500" onClick={() => changeStatus.mutate({ id: apt.id, status: 'cancelled' })}><XCircle className="h-4 w-4" /></Button>
           </div>
         )}
       </div>
@@ -50,6 +55,11 @@ export default function DoctorAppointments() {
     <div>
       <PageHeader title="My Appointments" description="Your scheduled, completed, and cancelled appointments" />
       <div className="p-6">
+        <div className="relative max-w-sm mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input placeholder="Search by patient, type, or notes..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        {isLoading && <p className="text-sm text-gray-400 mb-3">Loading appointments…</p>}
         <Tabs defaultValue="scheduled">
           <TabsList className="mb-4">
             <TabsTrigger value="scheduled">Scheduled <span className="ml-1 rounded-full bg-blue-100 text-blue-700 text-xs px-1.5">{scheduled.length}</span></TabsTrigger>

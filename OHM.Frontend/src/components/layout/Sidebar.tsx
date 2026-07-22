@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, UserCog, Calendar, BedDouble,
   FileText, Pill, TestTube, MessageSquare, BarChart3,
-  ClipboardList, LogOut, Hospital, Activity, X
+  ClipboardList, LogOut, Hospital, Activity, X, UserCog2
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -24,6 +24,7 @@ const navItems: Record<UserRole, NavItem[]> = {
     { label: 'Wards & Beds', href: '/admin/wards', icon: BedDouble },
     { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { label: 'Audit Log', href: '/admin/audit', icon: ClipboardList },
+    { label: 'Staff Accounts', href: '/admin/staff', icon: UserCog2 },
   ],
   doctor: [
     { label: 'Dashboard', href: '/doctor', icon: LayoutDashboard },
@@ -92,7 +93,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <div className="border-b border-gray-100 p-4">
+      <NavLink to={`/${user.role}/profile`} className="block border-b border-gray-100 p-4 hover:bg-gray-50 transition-colors">
         <div className="flex items-center gap-3">
           <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white', color)}>
             {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -102,7 +103,7 @@ export function Sidebar() {
             <p className="truncate text-xs text-gray-500">{user.email}</p>
           </div>
         </div>
-      </div>
+      </NavLink>
 
       <nav className="flex-1 overflow-y-auto p-3">
         <ul className="space-y-1">

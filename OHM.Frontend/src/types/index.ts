@@ -1,15 +1,25 @@
 export type UserRole = 'admin' | 'doctor' | 'nurse' | 'patient'
 
 export interface User {
+  /** AppUser (Identity) id — what the JWT `sub`/UserId claim contains. */
   id: string
+  /**
+   * Doctor.Id or Patient.Id — the profile record id that Appointments, Visits,
+   * Prescriptions etc. actually reference. Undefined for admin/nurse, who have
+   * no dedicated profile entity. Resolved once after login (see AuthContext).
+   */
+  profileId?: string
   name: string
   email: string
   role: UserRole
+  /** Permission claim strings from the user's role, e.g. "Permissions.Patients.View". */
+  permissions: string[]
   avatar?: string
 }
 
 export interface Patient {
   id: string
+  userId?: string
   name: string
   dateOfBirth: string
   gender: 'male' | 'female' | 'other'
@@ -26,6 +36,7 @@ export interface Patient {
 
 export interface Doctor {
   id: string
+  userId?: string
   name: string
   specialization: string
   email: string
@@ -112,9 +123,13 @@ export interface Visit {
   diagnosis: string
   treatment: string
   status: 'ongoing' | 'discharged'
+  /** Prescriptions/lab results linked to this visit, when fetched via GET /visit/{id}. */
+  prescriptions?: { id: string; medicationNames: string[]; status: string }[]
+  labResults?: { id: string; testName: string; result: string; status: string }[]
 }
 
 export interface DischargeSummary {
+  id: string
   visitId: string
   patientId: string
   patientName: string
@@ -123,6 +138,7 @@ export interface DischargeSummary {
   dischargeDate: string
   diagnosis: string
   treatment: string
+  /** Not part of the discharge summary itself on the backend — populated from the visit's linked prescriptions when available. */
   medications: Medication[]
   followUpInstructions: string
   followUpDate?: string

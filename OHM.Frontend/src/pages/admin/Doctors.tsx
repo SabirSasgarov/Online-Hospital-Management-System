@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, Star, Clock } from 'lucide-react'
+import { Plus, Search, Star, Clock, AlertCircle } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,34 +9,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useForm } from 'react-hook-form'
-import { mockDoctors } from '@/lib/mockData'
+import { useDoctors, useCreateDoctor, type DoctorFormInput } from '@/hooks/useDoctors'
+import { ApiError } from '@/lib/apiClient'
 import type { Doctor } from '@/types'
 
 const specializations = ['Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics', 'General Surgery', 'Radiology', 'Oncology', 'Dermatology', 'Psychiatry', 'Internal Medicine']
 
+interface FormValues {
+  name: string
+  specialization: string
+  email: string
+  password: string
+  phone: string
+}
+
 export default function AdminDoctors() {
-  const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState<Doctor | null>(null)
-  const { register, handleSubmit, reset, setValue } = useForm<Partial<Doctor>>()
+  const [formError, setFormError] = useState('')
+  const { data, isLoading } = useDoctors({ pageSize: 200 })
+  const createDoctor = useCreateDoctor()
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
+  const doctors = data?.doctors ?? []
   const filtered = doctors.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.specialization.toLowerCase().includes(search.toLowerCase()))
 
-  const onAdd = (data: Partial<Doctor>) => {
-    const doc: Doctor = {
-      id: `D${String(doctors.length + 1).padStart(3, '0')}`,
-      name: `Dr. ${data.name ?? ''}`,
-      specialization: data.specialization ?? '',
-      email: data.email ?? '',
-      phone: data.phone ?? '',
-      available: true,
-      rating: 4.5,
-      schedule: [],
+  const onAdd = async (data: FormValues) => {
+    setFormError('')
+    const input: DoctorFormInput = {
+      firstName: data.name.trim(),
+      lastName: '-',
+      email: data.email,
+      password: data.password,
+      specialization: data.specialization,
+      phone: data.phone,
     }
-    setDoctors(d => [...d, doc])
-    setShowAdd(false)
-    reset()
+    try {
+      await createDoctor.mutateAsync(input)
+      setShowAdd(false)
+      reset()
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Failed to add doctor.')
+    }
   }
 
   return (
@@ -44,7 +59,7 @@ export default function AdminDoctors() {
       <PageHeader
         title="Doctor Management"
         description="Manage doctor profiles, schedules, and availability"
-        action={<Button onClick={() => setShowAdd(true)}><Plus className="h-4 w-4" /> Add Doctor</Button>}
+        action={<Button onClick={() => { setShowAdd(true); setFormError('') }}><Plus className="h-4 w-4" /> Add Doctor</Button>}
       />
       <div className="p-6">
         <div className="mb-4 flex items-center gap-3">
@@ -54,6 +69,8 @@ export default function AdminDoctors() {
           </div>
           <Badge variant="secondary">{filtered.length} doctors</Badge>
         </div>
+
+        {isLoading && <p className="text-sm text-gray-400">Loading doctors…</p>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((doc) => (
@@ -115,12 +132,21 @@ export default function AdminDoctors() {
               <Input type="email" {...register('email', { required: true })} placeholder="doctor@hospital.com" />
             </div>
             <div className="space-y-1.5">
+              <Label>Temporary Password</Label>
+              <Input type="password" {...register('password', { required: true })} placeholder="Passw0rd!" />
+            </div>
+            <div className="space-y-1.5">
               <Label>Phone</Label>
               <Input {...register('phone')} placeholder="+1-555-0000" />
             </div>
+            {formError && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {formError}
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Add Doctor</Button>
+              <Button type="submit" disabled={createDoctor.isPending}>{createDoctor.isPending ? 'Adding…' : 'Add Doctor'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -152,10 +178,11 @@ export default function AdminDoctors() {
               <div>
                 <p className="text-xs text-gray-400 mb-2">Weekly Schedule</p>
                 <div className="space-y-2">
+                  {selectedDoc.schedule.length === 0 && <p className="text-xs text-gray-400">No schedule set</p>}
                   {selectedDoc.schedule.map(s => (
                     <div key={s.day} className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 text-sm">
                       <span className="font-medium text-blue-900">{s.day}</span>
-                      <span className="text-blue-700">{s.startTime} – {s.endTime}</span>
+                      <span className="text-blue-700">{s.startTime && s.endTime ? `${s.startTime} – ${s.endTime}` : ''}</span>
                     </div>
                   ))}
                 </div>

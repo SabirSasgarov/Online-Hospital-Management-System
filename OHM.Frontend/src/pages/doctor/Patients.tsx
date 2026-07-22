@@ -6,19 +6,23 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { mockPatients, mockAppointments } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Patient } from '@/types'
+import { usePatients, usePatient } from '@/hooks/usePatients'
+import { useAppointments } from '@/hooks/useAppointments'
 
 const statusVariant: Record<string, string> = { active: 'success', admitted: 'info', discharged: 'secondary' }
 
 export default function DoctorPatients() {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<Patient | null>(null)
+  const [viewId, setViewId] = useState<string | null>(null)
+  const { data: view } = usePatient(viewId ?? undefined)
 
-  const myPatientIds = new Set(mockAppointments.filter(a => a.doctorId === user?.id).map(a => a.patientId))
-  const patients = mockPatients.filter(p => myPatientIds.has(p.id) && p.name.toLowerCase().includes(search.toLowerCase()))
+  const { data: apts } = useAppointments({ doctorId: user?.profileId, pageSize: 200 })
+  const { data: allPatients, isLoading } = usePatients({ pageSize: 200 })
+
+  const myPatientIds = new Set((apts?.appointments ?? []).map(a => a.patientId))
+  const patients = (allPatients?.patients ?? []).filter(p => myPatientIds.has(p.id) && p.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div>
@@ -31,6 +35,7 @@ export default function DoctorPatients() {
           </div>
           <Badge variant="secondary">{patients.length} patients</Badge>
         </div>
+        {isLoading && <p className="text-sm text-gray-400 mb-3">Loading patients…</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {patients.map(p => (
             <Card key={p.id} className="hover:shadow-md transition-shadow">
@@ -41,7 +46,7 @@ export default function DoctorPatients() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900">{p.name}</p>
-                    <p className="text-xs text-gray-500">{p.id} · {p.dateOfBirth}</p>
+                    <p className="text-xs text-gray-500">{p.dateOfBirth}</p>
                   </div>
                   <Badge variant={statusVariant[p.status] as 'success' | 'info' | 'secondary'}>{p.status}</Badge>
                 </div>
@@ -54,12 +59,7 @@ export default function DoctorPatients() {
                     {p.conditions.map(c => <Badge key={c} variant="warning" className="text-xs">{c}</Badge>)}
                   </div>
                 )}
-                {p.allergies.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {p.allergies.map(a => <Badge key={a} variant="destructive" className="text-xs">⚠ {a}</Badge>)}
-                  </div>
-                )}
-                <Button variant="outline" size="sm" className="w-full mt-3 text-xs" onClick={() => setView(p)}>
+                <Button variant="outline" size="sm" className="w-full mt-3 text-xs" onClick={() => setViewId(p.id)}>
                   <Eye className="h-3 w-3 mr-1" /> View Full Profile
                 </Button>
               </CardContent>
@@ -68,7 +68,7 @@ export default function DoctorPatients() {
         </div>
       </div>
 
-      <Dialog open={!!view} onOpenChange={() => setView(null)}>
+      <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Patient Profile</DialogTitle></DialogHeader>
           {view && (
@@ -79,7 +79,7 @@ export default function DoctorPatients() {
                 </div>
                 <div>
                   <p className="text-lg font-semibold">{view.name}</p>
-                  <p className="text-sm text-gray-500">{view.id} · {view.dateOfBirth}</p>
+                  <p className="text-sm text-gray-500">{view.dateOfBirth}</p>
                   <Badge variant={statusVariant[view.status] as 'success' | 'info' | 'secondary'}>{view.status}</Badge>
                 </div>
               </div>
@@ -88,8 +88,8 @@ export default function DoctorPatients() {
                   <div key={k} className="rounded bg-gray-50 p-2"><p className="text-xs text-gray-400">{k}</p><p className="font-medium capitalize">{v}</p></div>
                 ))}
               </div>
-              <div><p className="text-xs text-gray-400 mb-1">Address</p><p className="text-sm">{view.address}</p></div>
-              <div><p className="text-xs text-gray-400 mb-1">Emergency Contact</p><p className="text-sm">{view.emergencyContact}</p></div>
+              <div><p className="text-xs text-gray-400 mb-1">Address</p><p className="text-sm">{view.address || '—'}</p></div>
+              <div><p className="text-xs text-gray-400 mb-1">Emergency Contact</p><p className="text-sm">{view.emergencyContact || '—'}</p></div>
               {view.conditions.length > 0 && (
                 <div><p className="text-xs text-gray-400 mb-1">Conditions</p><div className="flex flex-wrap gap-1">{view.conditions.map(c => <Badge key={c} variant="warning">{c}</Badge>)}</div></div>
               )}

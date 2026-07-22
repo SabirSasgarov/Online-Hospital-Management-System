@@ -2,18 +2,20 @@ import { Pill } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { mockPrescriptions } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePrescriptions } from '@/hooks/usePrescriptions'
 
 export default function PatientPrescriptions() {
   const { user } = useAuth()
-  const myRx = mockPrescriptions.filter(p => p.patientId === user?.id)
+  const { data, isLoading } = usePrescriptions({ patientId: user?.profileId, pageSize: 200 })
+  const myRx = data?.prescriptions ?? []
 
   return (
     <div>
       <PageHeader title="My Prescriptions" description="View all your prescriptions and medications" />
       <div className="p-6 space-y-4">
-        {myRx.length === 0 && <p className="py-12 text-center text-sm text-gray-400">No prescriptions found</p>}
+        {isLoading && <p className="text-sm text-gray-400">Loading prescriptions…</p>}
+        {!isLoading && myRx.length === 0 && <p className="py-12 text-center text-sm text-gray-400">No prescriptions found</p>}
         {myRx.map(rx => (
           <Card key={rx.id}>
             <CardContent className="p-5">
@@ -24,7 +26,7 @@ export default function PatientPrescriptions() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">{rx.doctorName}</p>
-                    <p className="text-xs text-gray-400">{rx.date} · Visit: {rx.visitId}</p>
+                    <p className="text-xs text-gray-400">{rx.date}</p>
                   </div>
                 </div>
                 <Badge variant={rx.status === 'active' ? 'success' : 'secondary'}>{rx.status}</Badge>

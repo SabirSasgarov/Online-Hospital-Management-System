@@ -1,24 +1,19 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { Hospital, Eye, EyeOff, Stethoscope, Heart, User } from 'lucide-react'
+import { Hospital, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 import type { UserRole } from '@/types'
 
 interface FormData {
   email: string
   password: string
 }
-
-const roles: { value: UserRole; label: string; icon: React.ComponentType<{ className?: string }>; color: string; demo: { email: string; password: string } }[] = [
-  { value: 'doctor', label: 'Doctor', icon: Stethoscope, color: 'border-blue-500 bg-blue-50 text-blue-700', demo: { email: 'doctor@hospital.com', password: 'doctor123' } },
-  { value: 'nurse', label: 'Nurse', icon: Heart, color: 'border-teal-500 bg-teal-50 text-teal-700', demo: { email: 'nurse@hospital.com', password: 'nurse123' } },
-  { value: 'patient', label: 'Patient', icon: User, color: 'border-green-500 bg-green-50 text-green-700', demo: { email: 'patient@hospital.com', password: 'patient123' } },
-]
 
 const roleRoutes: Record<UserRole, string> = {
   admin: '/admin',
@@ -29,26 +24,34 @@ const roleRoutes: Record<UserRole, string> = {
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login } = useAuth()
-  const [selectedRole, setSelectedRole] = useState<UserRole>('doctor')
+  const { login, googleSignIn } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>()
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>()
 
   const onSubmit = async (data: FormData) => {
     setError('')
-    const ok = await login(data.email, data.password, selectedRole)
-    if (ok) {
-      navigate(roleRoutes[selectedRole])
+    setUnconfirmedEmail(null)
+    const result = await login(data.email, data.password)
+    if (result.ok && result.role) {
+      navigate(roleRoutes[result.role])
     } else {
-      setError('Invalid email or password for the selected role.')
+      setError(result.message ?? 'Invalid email or password.')
+      if (result.message?.toLowerCase().includes('confirm your email')) {
+        setUnconfirmedEmail(data.email)
+      }
     }
   }
 
-  const applyDemo = (role: typeof roles[0]) => {
-    setSelectedRole(role.value)
-    setValue('email', role.demo.email)
-    setValue('password', role.demo.password)
+  const onGoogleToken = async (idToken: string) => {
+    setError('')
+    const result = await googleSignIn(idToken)
+    if (result.ok && result.role) {
+      navigate(roleRoutes[result.role])
+    } else {
+      setError(result.message ?? 'Google sign-in failed.')
+    }
   }
 
   return (
@@ -60,16 +63,11 @@ export default function Login() {
         <h1 className="mb-2 text-4xl font-bold">Welcome Back</h1>
         <p className="mb-10 text-blue-100">Sign in to access the hospital management system</p>
 
-        <div className="w-full max-w-sm space-y-3">
-          {roles.map((role) => (
-            <div key={role.value} className="flex items-center gap-4 rounded-xl bg-white/10 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
-                <role.icon className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold">{role.label}</p>
-                <p className="text-xs text-blue-100">{role.demo.email}</p>
-              </div>
+        <div className="grid grid-cols-2 gap-4 text-sm w-full max-w-sm">
+          {['Doctor & Nurse Portals', 'Patient Records', 'Appointment Scheduling', 'Secure Messaging'].map((f) => (
+            <div key={f} className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-blue-100" />
+              <span>{f}</span>
             </div>
           ))}
         </div>
@@ -87,32 +85,13 @@ export default function Login() {
           <Card className="shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-xl">Sign In</CardTitle>
-              <p className="text-sm text-gray-500">Select your role and enter your credentials</p>
+              <p className="text-sm text-gray-500">Enter your credentials to continue</p>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div>
-                <Label className="mb-2 block">I am a...</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {roles.map((role) => (
-                    <button
-                      key={role.value}
-                      type="button"
-                      onClick={() => setSelectedRole(role.value)}
-                      className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-xs font-medium transition-all ${
-                        selectedRole === role.value ? role.color : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                      }`}
-                    >
-                      <role.icon className="h-5 w-5" />
-                      {role.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="your@email.com" {...register('email', { required: 'Email is required' })} />
+                  <Input id="email" type="email" placeholder="your@email.com" autoFocus {...register('email', { required: 'Email is required' })} />
                   {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-1.5">
@@ -139,6 +118,14 @@ export default function Login() {
                 {error && (
                   <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">
                     {error}
+                    {unconfirmedEmail && (
+                      <>
+                        {' '}
+                        <Link to={`/confirm-email?email=${encodeURIComponent(unconfirmedEmail)}`} className="font-medium underline">
+                          Confirm it now
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -147,21 +134,20 @@ export default function Login() {
                 </Button>
               </form>
 
-              <div className="border-t border-gray-100 pt-4">
-                <p className="mb-2 text-xs font-medium text-gray-500">Quick demo access — click to fill:</p>
-                <div className="flex flex-wrap gap-2">
-                  {roles.map((role) => (
-                    <button
-                      key={role.value}
-                      type="button"
-                      onClick={() => applyDemo(role)}
-                      className="rounded-md bg-gray-100 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-200"
-                    >
-                      {role.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs text-gray-400">OR</span>
+                <div className="h-px flex-1 bg-gray-200" />
               </div>
+
+              <GoogleSignInButton onToken={onGoogleToken} />
+
+              <p className="text-center text-sm text-gray-500">
+                New patient?{' '}
+                <Link to="/register" className="font-medium text-blue-600 hover:underline">
+                  Create an account
+                </Link>
+              </p>
 
               <p className="text-center text-sm text-gray-500">
                 Admin?{' '}

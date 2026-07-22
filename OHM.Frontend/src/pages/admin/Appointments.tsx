@@ -10,7 +10,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { mockAppointments, mockPatients, mockDoctors } from '@/lib/mockData'
+import { useAppointments, useCreateAppointment, useChangeAppointmentStatus, type AppointmentFormInput } from '@/hooks/useAppointments'
+import { usePatients } from '@/hooks/usePatients'
+import { useDoctors } from '@/hooks/useDoctors'
+import { ApiError } from '@/lib/apiClient'
 import type { Appointment } from '@/types'
 
 const statusVariant: Record<string, string> = {
@@ -27,25 +30,32 @@ const typeVariant: Record<string, string> = {
   checkup: 'info',
 }
 
+interface FormValues {
+  patientId: string
+  doctorId: string
+  date: string
+  time: string
+  type: Appointment['type']
+  notes: string
+}
+
 export default function AdminAppointments() {
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments)
   const [globalFilter, setGlobalFilter] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [conflict, setConflict] = useState('')
-  const { register, handleSubmit, reset, setValue } = useForm<Partial<Appointment>>()
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
+  const { data, isLoading } = useAppointments({ pageSize: 200 })
+  const { data: patientsData } = usePatients({ pageSize: 200 })
+  const { data: doctorsData } = useDoctors({ pageSize: 200 })
+  const createAppointment = useCreateAppointment()
+  const changeStatus = useChangeAppointmentStatus()
 
-  const detectConflict = (doctorId: string, date: string, time: string): boolean => {
-    return appointments.some(a =>
-      a.doctorId === doctorId &&
-      a.date === date &&
-      a.time === time &&
-      a.status === 'scheduled'
-    )
-  }
+  const appointments = data?.appointments ?? []
+  const patients = patientsData?.patients ?? []
+  const doctors = doctorsData?.doctors ?? []
 
   const columns: ColumnDef<Appointment>[] = [
-    { accessorKey: 'id', header: 'ID', size: 80 },
     { accessorKey: 'patientName', header: 'Patient', cell: ({ row }) => <span className="font-medium">{row.original.patientName}</span> },
     { accessorKey: 'doctorName', header: 'Doctor' },
     { accessorKey: 'date', header: 'Date' },
@@ -59,8 +69,8 @@ export default function AdminAppointments() {
         <div className="flex gap-1">
           {row.original.status === 'scheduled' && (
             <>
-              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setAppointments(a => a.map(x => x.id === row.original.id ? { ...x, status: 'completed' } : x))}>Complete</Button>
-              <Button size="sm" variant="ghost" className="text-xs h-7 text-red-500" onClick={() => setAppointments(a => a.map(x => x.id === row.original.id ? { ...x, status: 'cancelled' } : x))}>Cancel</Button>
+              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => changeStatus.mutate({ id: row.original.id, status: 'completed' })}>Complete</Button>
+              <Button size="sm" variant="ghost" className="text-xs h-7 text-red-500" onClick={() => changeStatus.mutate({ id: row.original.id, status: 'cancelled' })}>Cancel</Button>
             </>
           )}
         </div>
@@ -70,29 +80,23 @@ export default function AdminAppointments() {
 
   const table = useReactTable({ data: appointments, columns, getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(), state: { globalFilter }, onGlobalFilterChange: setGlobalFilter })
 
-  const onAdd = (data: Partial<Appointment>) => {
-    const doctor = mockDoctors.find(d => d.id === data.doctorId)
-    const patient = mockPatients.find(p => p.id === data.patientId)
-    if (data.doctorId && data.date && data.time && detectConflict(data.doctorId, data.date, data.time)) {
-      setConflict(`Conflict: ${doctor?.name} already has an appointment at ${data.time} on ${data.date}.`)
-      return
-    }
+  const onAdd = async (data: FormValues) => {
     setConflict('')
-    const newA: Appointment = {
-      id: `A${String(appointments.length + 1).padStart(3, '0')}`,
-      patientId: data.patientId ?? '',
-      patientName: patient?.name ?? '',
-      doctorId: data.doctorId ?? '',
-      doctorName: doctor?.name ?? '',
-      date: data.date ?? '',
-      time: data.time ?? '',
-      type: (data.type as Appointment['type']) ?? 'consultation',
-      status: 'scheduled',
+    const input: AppointmentFormInput = {
+      patientId: data.patientId,
+      doctorId: data.doctorId,
+      date: data.date,
+      time: data.time,
+      type: data.type ?? 'consultation',
       notes: data.notes,
     }
-    setAppointments(a => [...a, newA])
-    setShowAdd(false)
-    reset()
+    try {
+      await createAppointment.mutateAsync(input)
+      setShowAdd(false)
+      reset()
+    } catch (err) {
+      setConflict(err instanceof ApiError ? err.message : 'Failed to book appointment.')
+    }
   }
 
   return (
@@ -138,6 +142,7 @@ export default function AdminAppointments() {
                   ))}
                 </tbody>
               </table>
+              {isLoading && <div className="py-12 text-center text-sm text-gray-400">Loading appointments…</div>}
             </div>
           </CardContent>
         </Card>
@@ -151,14 +156,14 @@ export default function AdminAppointments() {
               <Label>Patient</Label>
               <Select onValueChange={v => setValue('patientId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select patient" /></SelectTrigger>
-                <SelectContent>{mockPatients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Doctor</Label>
               <Select onValueChange={v => setValue('doctorId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
-                <SelectContent>{mockDoctors.map(d => <SelectItem key={d.id} value={d.id}>{d.name} — {d.specialization}</SelectItem>)}</SelectContent>
+                <SelectContent>{doctors.map(d => <SelectItem key={d.id} value={d.id}>{d.name} — {d.specialization}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -195,7 +200,7 @@ export default function AdminAppointments() {
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-              <Button type="submit">Book Appointment</Button>
+              <Button type="submit" disabled={createAppointment.isPending}>{createAppointment.isPending ? 'Booking…' : 'Book Appointment'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

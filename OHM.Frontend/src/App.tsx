@@ -1,11 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { Toaster } from '@/components/ui/toaster'
+import { toast } from '@/hooks/use-toast'
+import { ApiError } from '@/lib/apiClient'
 import type { UserRole } from '@/types'
 
+function describeError(error: unknown): string {
+  if (error instanceof ApiError) return error.message
+  if (error instanceof Error) return error.message
+  return 'Something went wrong. Please try again.'
+}
+
 import Login from '@/pages/auth/Login'
+import Register from '@/pages/auth/Register'
+import ConfirmEmail from '@/pages/auth/ConfirmEmail'
 import AdminLogin from '@/pages/auth/AdminLogin'
+import Profile from '@/pages/shared/Profile'
 
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminPatients from '@/pages/admin/Patients'
@@ -14,6 +26,7 @@ import AdminAppointments from '@/pages/admin/Appointments'
 import AdminWards from '@/pages/admin/Wards'
 import AdminAnalytics from '@/pages/admin/Analytics'
 import AdminAuditLog from '@/pages/admin/AuditLog'
+import AdminStaff from '@/pages/admin/Staff'
 
 import DoctorDashboard from '@/pages/doctor/Dashboard'
 import DoctorPatients from '@/pages/doctor/Patients'
@@ -36,7 +49,16 @@ import PatientPrescriptions from '@/pages/patient/Prescriptions'
 import PatientLabResults from '@/pages/patient/LabResults'
 import PatientMessages from '@/pages/patient/Messages'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  // Any mutation that doesn't handle its own error (most already do inline for forms)
+  // still surfaces a toast so failures are never silent.
+  mutationCache: new MutationCache({
+    onError: (error, _vars, _ctx, mutation) => {
+      if (mutation.options.onError) return // page already handles it inline
+      toast({ title: 'Action failed', description: describeError(error), variant: 'destructive' })
+    },
+  }),
+})
 
 const roleHomeRoutes: Record<UserRole, string> = {
   admin: '/admin',
@@ -45,15 +67,25 @@ const roleHomeRoutes: Record<UserRole, string> = {
   patient: '/patient',
 }
 
+function FullScreenLoader() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
+    </div>
+  )
+}
+
 function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole: UserRole }) {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isInitializing } = useAuth()
+  if (isInitializing) return <FullScreenLoader />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (user?.role !== allowedRole) return <Navigate to={roleHomeRoutes[user!.role]} replace />
   return <>{children}</>
 }
 
 function RootRedirect() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isInitializing } = useAuth()
+  if (isInitializing) return <FullScreenLoader />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <Navigate to={roleHomeRoutes[user!.role]} replace />
 }
@@ -63,6 +95,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/confirm-email" element={<ConfirmEmail />} />
       <Route path="/admin-login" element={<AdminLogin />} />
 
       <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AppLayout /></ProtectedRoute>}>
@@ -73,6 +107,8 @@ function AppRoutes() {
         <Route path="wards" element={<AdminWards />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="audit" element={<AdminAuditLog />} />
+        <Route path="staff" element={<AdminStaff />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="/doctor" element={<ProtectedRoute allowedRole="doctor"><AppLayout /></ProtectedRoute>}>
@@ -83,6 +119,7 @@ function AppRoutes() {
         <Route path="lab-results" element={<DoctorLabResults />} />
         <Route path="discharge" element={<DoctorDischarge />} />
         <Route path="messages" element={<DoctorMessages />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="/nurse" element={<ProtectedRoute allowedRole="nurse"><AppLayout /></ProtectedRoute>}>
@@ -91,6 +128,7 @@ function AppRoutes() {
         <Route path="wards" element={<NurseWards />} />
         <Route path="appointments" element={<NurseAppointments />} />
         <Route path="lab-results" element={<NurseLabResults />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="/patient" element={<ProtectedRoute allowedRole="patient"><AppLayout /></ProtectedRoute>}>
@@ -100,6 +138,7 @@ function AppRoutes() {
         <Route path="prescriptions" element={<PatientPrescriptions />} />
         <Route path="lab-results" element={<PatientLabResults />} />
         <Route path="messages" element={<PatientMessages />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -114,6 +153,7 @@ export default function App() {
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
+        <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   )

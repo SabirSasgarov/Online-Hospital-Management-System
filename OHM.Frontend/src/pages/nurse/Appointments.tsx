@@ -1,16 +1,32 @@
+import { useState } from 'react'
+import { Search } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { mockAppointments } from '@/lib/mockData'
+import { useAppointments } from '@/hooks/useAppointments'
 
 const statusVariant: Record<string, string> = { scheduled: 'info', completed: 'success', cancelled: 'destructive', 'no-show': 'warning' }
 
 export default function NurseAppointments() {
-  const upcoming = mockAppointments.filter(a => a.status === 'scheduled').sort((a, b) => a.date.localeCompare(b.date))
+  const [search, setSearch] = useState('')
+  const { data, isLoading } = useAppointments({ status: 'Scheduled', pageSize: 200 })
+  const q = search.trim().toLowerCase()
+  const upcoming = (data?.appointments ?? [])
+    .filter(a => !q || a.patientName.toLowerCase().includes(q) || a.doctorName.toLowerCase().includes(q) || a.type.toLowerCase().includes(q))
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+
   return (
     <div>
       <PageHeader title="Appointments" description="View all upcoming appointments" />
       <div className="p-6 space-y-3">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input placeholder="Search by patient, doctor, or type..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        {isLoading && <p className="text-sm text-gray-400">Loading appointments…</p>}
+        {!isLoading && upcoming.length === 0 && <p className="py-8 text-center text-sm text-gray-400">No upcoming appointments</p>}
         {upcoming.map(apt => (
           <Card key={apt.id}>
             <CardContent className="p-4 flex items-center gap-4">

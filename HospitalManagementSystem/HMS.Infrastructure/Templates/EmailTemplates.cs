@@ -46,6 +46,12 @@ public static class EmailTemplates
            <div style=""text-align:center;""><span class=""code-box"">{code}</span></div>
            <p>This code expires in <strong>15 minutes</strong>. If you did not request this, please ignore the email.</p>");
 
+    public static string EmailConfirmationCode(string userName, string code) => Wrap("Confirm Your Email",
+        $@"<p>Hello <strong>{userName}</strong>,</p>
+           <p>Thanks for signing up for CareFlow. Use the code below to confirm your email address:</p>
+           <div style=""text-align:center;""><span class=""code-box"">{code}</span></div>
+           <p>This code expires in <strong>15 minutes</strong>. If you did not create this account, please ignore this email.</p>");
+
     public static string Welcome(string userName) => Wrap("Welcome to CareFlow",
         $@"<p>Hello <strong>{userName}</strong>,</p>
            <p>Your account has been successfully created. You can now log in to the CareFlow portal.</p>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, AlertCircle } from 'lucide-react'
+import { Plus, AlertCircle, Search } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -10,44 +10,55 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { mockAppointments, mockDoctors } from '@/lib/mockData'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAppointments, useCreateAppointment, type AppointmentFormInput } from '@/hooks/useAppointments'
+import { useDoctors } from '@/hooks/useDoctors'
+import { ApiError } from '@/lib/apiClient'
 import type { Appointment } from '@/types'
 
 const statusVariant: Record<string, string> = { scheduled: 'info', completed: 'success', cancelled: 'destructive', 'no-show': 'warning' }
 
+interface FormValues {
+  doctorId: string
+  date: string
+  time: string
+  type: Appointment['type']
+}
+
 export default function PatientAppointments() {
   const { user } = useAuth()
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments.filter(a => a.patientId === user?.id))
   const [showBook, setShowBook] = useState(false)
   const [conflict, setConflict] = useState('')
-  const { register, handleSubmit, reset, setValue } = useForm<Partial<Appointment>>()
+  const [search, setSearch] = useState('')
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
-  const onBook = (data: Partial<Appointment>) => {
-    const conflictExists = mockAppointments.some(a =>
-      a.doctorId === data.doctorId && a.date === data.date && a.time === data.time && a.status === 'scheduled'
-    )
-    if (conflictExists) {
-      const doctor = mockDoctors.find(d => d.id === data.doctorId)
-      setConflict(`${doctor?.name} is not available at this time. Please choose another slot.`)
-      return
-    }
-    const doctor = mockDoctors.find(d => d.id === data.doctorId)
-    const apt: Appointment = {
-      id: `A${Date.now()}`,
-      patientId: user?.id ?? '',
-      patientName: user?.name ?? '',
-      doctorId: data.doctorId ?? '',
-      doctorName: doctor?.name ?? '',
-      date: data.date ?? '',
-      time: data.time ?? '',
-      type: (data.type as Appointment['type']) ?? 'consultation',
-      status: 'scheduled',
-    }
-    setAppointments(a => [...a, apt])
-    setShowBook(false)
+  const { data, isLoading } = useAppointments({ patientId: user?.profileId, pageSize: 200 })
+  const { data: doctorsData } = useDoctors({ pageSize: 200 })
+  const createAppointment = useCreateAppointment()
+
+  const q = search.trim().toLowerCase()
+  const appointments = (data?.appointments ?? []).filter(a =>
+    !q || a.doctorName.toLowerCase().includes(q) || a.type.toLowerCase().includes(q) || (a.notes ?? '').toLowerCase().includes(q)
+  )
+  const doctors = doctorsData?.doctors ?? []
+
+  const onBook = async (data: FormValues) => {
     setConflict('')
-    reset()
+    if (!user?.profileId) return
+    const input: AppointmentFormInput = {
+      patientId: user.profileId,
+      doctorId: data.doctorId,
+      date: data.date,
+      time: data.time,
+      type: data.type ?? 'consultation',
+    }
+    try {
+      await createAppointment.mutateAsync(input)
+      setShowBook(false)
+      reset()
+    } catch (err) {
+      setConflict(err instanceof ApiError ? err.message : 'Failed to book appointment.')
+    }
   }
 
   const upcoming = appointments.filter(a => a.status === 'scheduled')
@@ -78,6 +89,11 @@ export default function PatientAppointments() {
         action={<Button onClick={() => { setShowBook(true); setConflict('') }}><Plus className="h-4 w-4" /> Book Appointment</Button>}
       />
       <div className="p-6">
+        <div className="relative max-w-sm mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input placeholder="Search by doctor, type, or notes..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        {isLoading && <p className="text-sm text-gray-400 mb-3">Loading appointments…</p>}
         <Tabs defaultValue="upcoming">
           <TabsList className="mb-4">
             <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
@@ -100,7 +116,7 @@ export default function PatientAppointments() {
               <Label>Doctor</Label>
               <Select onValueChange={v => setValue('doctorId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
-                <SelectContent>{mockDoctors.map(d => <SelectItem key={d.id} value={d.id}>{d.name} — {d.specialization}</SelectItem>)}</SelectContent>
+                <SelectContent>{doctors.map(d => <SelectItem key={d.id} value={d.id}>{d.name} — {d.specialization}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -125,7 +141,7 @@ export default function PatientAppointments() {
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowBook(false)}>Cancel</Button>
-              <Button type="submit">Book</Button>
+              <Button type="submit" disabled={createAppointment.isPending}>{createAppointment.isPending ? 'Booking…' : 'Book'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -5,7 +5,7 @@
 		IdentityUserClaim<Guid>, IdentityUserRole<Guid>, IdentityUserLogin<Guid>,
 		IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>(options), IAppDbContext
 	{
-		public DbSet<AppUser> Users => Set<AppUser>();
+		public new DbSet<AppUser> Users => Set<AppUser>();
 		public DbSet<Patient> Patients => Set<Patient>();
 		public DbSet<Doctor> Doctors => Set<Doctor>();
 		public DbSet<Appointment> Appointments => Set<Appointment>();
@@ -33,7 +33,9 @@
 			var now = DateTime.UtcNow;
 			var user = currentUserService.UserName ?? "system";
 
-			foreach (var entry in ChangeTracker.Entries<Domain.Common.AuditableEntity>())
+			var auditableEntries = ChangeTracker.Entries<Domain.Common.AuditableEntity>().ToList();
+
+			foreach (var entry in auditableEntries)
 			{
 				switch (entry.State)
 				{
@@ -47,6 +49,40 @@
 						break;
 				}
 			}
+
+			// Record a CREATE/UPDATE/DELETE row for every tracked domain-entity change so the
+			// admin Audit Log page has real data to show (previously nothing ever wrote here).
+			if (currentUserService.IsAuthenticated)
+			{
+				foreach (var entry in auditableEntries)
+				{
+					if (entry.Entity is AuditLog) continue; // never audit the audit table itself
+
+					var action = entry.State switch
+					{
+						EntityState.Added => "CREATE",
+						EntityState.Deleted => "DELETE",
+						EntityState.Modified when entry.Property(nameof(Domain.Common.AuditableEntity.IsDeleted)).IsModified
+							&& entry.Entity.IsDeleted => "DELETE",
+						EntityState.Modified => "UPDATE",
+						_ => null
+					};
+					if (action is null) continue;
+
+					AuditLogs.Add(new AuditLog
+					{
+						UserId = currentUserService.UserId ?? string.Empty,
+						UserName = currentUserService.UserName ?? "system",
+						UserRole = currentUserService.Role ?? string.Empty,
+						Action = action,
+						Resource = entry.Entity.GetType().Name,
+						ResourceId = entry.Entity.Id.ToString(),
+						IpAddress = currentUserService.IpAddress ?? string.Empty,
+						Timestamp = now,
+					});
+				}
+			}
+
 			return base.SaveChangesAsync(cancellationToken);
 		}
 	}
