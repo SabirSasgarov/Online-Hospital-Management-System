@@ -11,17 +11,18 @@ namespace HMS.Application.Visits.Queries
         DateTime? To,
         int Page = 1,
         int PageSize = 20
-    ) : IRequest<PaginatedResult<VisitSummaryDto>>;
+    ) : IRequest<PaginatedResult<VisitDto>>;
 
     public class GetVisitsQueryHandler(IAppDbContext db, IMapper mapper)
-        : IRequestHandler<GetVisitsQuery, PaginatedResult<VisitSummaryDto>>
+        : IRequestHandler<GetVisitsQuery, PaginatedResult<VisitDto>>
     {
-        public async Task<PaginatedResult<VisitSummaryDto>> Handle(
+        public async Task<PaginatedResult<VisitDto>> Handle(
             GetVisitsQuery request, CancellationToken cancellationToken)
         {
             var query = db.Visits
                 .Include(v => v.Patient).ThenInclude(p => p.User)
                 .Include(v => v.Doctor).ThenInclude(d => d.User)
+                .Include(v => v.Bed)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -47,9 +48,9 @@ namespace HMS.Application.Visits.Queries
                 .Take(request.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PaginatedResult<VisitSummaryDto>
+            return new PaginatedResult<VisitDto>
             {
-                Items      = mapper.Map<List<VisitSummaryDto>>(visits),
+                Items      = mapper.Map<List<VisitDto>>(visits),
                 TotalCount = total,
                 Page       = request.Page,
                 PageSize   = request.PageSize

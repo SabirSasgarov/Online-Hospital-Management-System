@@ -25,6 +25,10 @@
   --radius-sm: calc(0.5rem - 4px);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

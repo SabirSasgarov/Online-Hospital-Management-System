@@ -37,6 +37,9 @@ app.UseSwaggerUI(c =>
 if (!app.Environment.IsProduction())
 	app.UseHttpsRedirection();
 
+Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads"));
+app.UseStaticFiles();
+
 app.UseExceptionHandler();
 app.UseCors();
 app.UseRateLimiter();
@@ -56,6 +59,7 @@ using (var scope = app.Services.CreateScope())
 	await PatientSeeds.SeedAsync(sp);        // 3. Patient users + Patient profiles
 	await WardSeeds.SeedAsync(sp);           // 4. Wards → Rooms → Beds
 	await ClinicalDataSeeds.SeedAsync(sp);   // 5. Appointments, Visits, Prescriptions, Labs, Messages
+	await OfferSeeds.SeedAsync(sp);          // 6. Default "What CareFlow Offers" home page cards
 }
 
 app.Run();

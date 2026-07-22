@@ -28,6 +28,7 @@ export interface DoctorFormInput {
   password?: string
   specialization: string
   phone: string
+  profileImageUrl?: string
 }
 
 export function useCreateDoctor() {
@@ -42,6 +43,7 @@ export function useCreateDoctor() {
         password: input.password || 'Passw0rd!',
         specialization: input.specialization,
         phone: input.phone,
+        profileImageUrl: input.profileImageUrl || undefined,
         schedules: [],
       }
       return doctorsApi.create(dto)

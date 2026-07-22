@@ -1,12 +1,23 @@
 using HMS.Application.Doctors.Commands;
 using HMS.Application.Doctors.DoctorsDTOs;
 using HMS.Application.Doctors.Queries;
+using HMS.Application.Public.Queries;
 
 namespace HMS.API.Controllers
 {
     [Authorize]
     public class DoctorController(ISender sender) : BaseApiController
     {
+        //unauthenticated "Our Doctors" section on the home page
+        [AllowAnonymous]
+        [HttpGet("public")]
+        public async Task<IActionResult> GetPublicDoctors(
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 12, CancellationToken ct = default)
+        {
+            var result = await sender.Send(new GetPublicDoctorsQuery(page, pageSize), ct);
+            return Ok(result);
+        }
+
         // GET /api/doctor?search=&specialization=&isAvailable=&page=1&pageSize=10
         [HttpGet]
         [HasPermission(Permissions.Doctors.View)]

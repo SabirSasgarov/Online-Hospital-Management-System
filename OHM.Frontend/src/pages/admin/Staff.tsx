@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { useStaffUsers, useCreateStaffUser, useSetUserActive } from '@/hooks/useUsers'
 import { ApiError } from '@/lib/apiClient'
 
@@ -18,6 +19,7 @@ interface FormData {
   email: string
   password: string
   role: 'Nurse' | 'Admin'
+  profileImageUrl?: string
 }
 
 const passwordRules = [
@@ -103,6 +105,7 @@ export default function AdminStaff() {
         <DialogContent>
           <DialogHeader><DialogTitle>New Staff Account</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
+            <ImageUpload value={watch('profileImageUrl')} onChange={(url) => setValue('profileImageUrl', url)} />
             <div className="space-y-1.5">
               <Label>Role</Label>
               <Select value={role} onValueChange={(v) => setValue('role', v as FormData['role'])}>
@@ -135,7 +138,6 @@ export default function AdminStaff() {
               </p>
               {errors.password && <p className="text-xs text-red-500">Password is required</p>}
             </div>
-
             {formError && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">{formError}</div>
             )}

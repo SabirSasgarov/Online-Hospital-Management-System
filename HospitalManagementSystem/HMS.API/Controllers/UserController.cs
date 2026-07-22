@@ -41,6 +41,7 @@ namespace HMS.API.Controllers
 					FirstName = user.FirstName,
 					LastName = user.LastName,
 					Email = user.Email ?? string.Empty,
+					ProfileImageUrl = user.ProfileImageUrl,
 					IsActive = user.IsActive,
 					EmailConfirmed = user.EmailConfirmed,
 					Roles = roles,
@@ -67,6 +68,7 @@ namespace HMS.API.Controllers
 				Email = dto.Email,
 				FirstName = dto.FirstName,
 				LastName = dto.LastName,
+				ProfileImageUrl = dto.ProfileImageUrl,
 				EmailConfirmed = true, // admin-created staff accounts don't need self-confirmation
 				IsActive = true,
 			};
@@ -86,6 +88,7 @@ namespace HMS.API.Controllers
 				FirstName = user.FirstName,
 				LastName = user.LastName,
 				Email = user.Email ?? string.Empty,
+				ProfileImageUrl = user.ProfileImageUrl,
 				IsActive = user.IsActive,
 				EmailConfirmed = user.EmailConfirmed,
 				Roles = [matchedRole],

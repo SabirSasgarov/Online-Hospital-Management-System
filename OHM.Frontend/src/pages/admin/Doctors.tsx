@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { useForm } from 'react-hook-form'
 import { useDoctors, useCreateDoctor, type DoctorFormInput } from '@/hooks/useDoctors'
 import { ApiError } from '@/lib/apiClient'
@@ -21,6 +22,7 @@ interface FormValues {
   email: string
   password: string
   phone: string
+  profileImageUrl?: string
 }
 
 export default function AdminDoctors() {
@@ -30,7 +32,8 @@ export default function AdminDoctors() {
   const [formError, setFormError] = useState('')
   const { data, isLoading } = useDoctors({ pageSize: 200 })
   const createDoctor = useCreateDoctor()
-  const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
+  const { register, handleSubmit, reset, setValue, watch } = useForm<FormValues>()
+  const profileImageUrl = watch('profileImageUrl')
 
   const doctors = data?.doctors ?? []
   const filtered = doctors.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.specialization.toLowerCase().includes(search.toLowerCase()))
@@ -44,6 +47,7 @@ export default function AdminDoctors() {
       password: data.password,
       specialization: data.specialization,
       phone: data.phone,
+      profileImageUrl: data.profileImageUrl,
     }
     try {
       await createDoctor.mutateAsync(input)
@@ -116,6 +120,7 @@ export default function AdminDoctors() {
         <DialogContent>
           <DialogHeader><DialogTitle>Add New Doctor</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit(onAdd)} className="space-y-4">
+            <ImageUpload value={profileImageUrl} onChange={(url) => setValue('profileImageUrl', url)} />
             <div className="space-y-1.5">
               <Label>Full Name (without Dr.)</Label>
               <Input {...register('name', { required: true })} placeholder="James Anderson" />

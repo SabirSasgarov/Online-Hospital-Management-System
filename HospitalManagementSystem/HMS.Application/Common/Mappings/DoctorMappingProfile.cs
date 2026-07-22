@@ -15,6 +15,7 @@ namespace HMS.Application.Common.Mappings
                 .ForMember(d => d.FullName,       o => o.MapFrom(s => s.User.FirstName + " " + s.User.LastName))
                 .ForMember(d => d.Email,          o => o.MapFrom(s => s.User.Email ?? string.Empty))
                 .ForMember(d => d.IsActive,       o => o.MapFrom(s => s.User.IsActive))
+                .ForMember(d => d.ProfileImageUrl, o => o.MapFrom(s => s.User.ProfileImageUrl))
                 .ForMember(d => d.ScheduleDays,   o => o.MapFrom(s => s.Schedules.Select(sc => sc.Day.ToString()).ToList()));
 
             CreateMap<Doctor, DoctorDto>()
@@ -27,7 +28,8 @@ namespace HMS.Application.Common.Mappings
 
             CreateMap<CreateDoctorDto, AppUser>(MemberList.None)
                 .ForMember(d => d.EmailConfirmed, o => o.MapFrom(_ => true))
-                .ForMember(d => d.IsActive,       o => o.MapFrom(_ => true));
+                .ForMember(d => d.IsActive,       o => o.MapFrom(_ => true))
+                .ForMember(d => d.ProfileImageUrl, o => o.MapFrom(s => s.ProfileImageUrl));
 
             CreateMap<CreateDoctorDto, Doctor>(MemberList.None)
                 .ForMember(d => d.UserId,   o => o.Ignore())
@@ -41,7 +43,8 @@ namespace HMS.Application.Common.Mappings
 
             CreateMap<UpdateDoctorDto, AppUser>(MemberList.None)
                 .ForMember(d => d.FirstName, o => o.MapFrom(s => s.FirstName))
-                .ForMember(d => d.LastName,  o => o.MapFrom(s => s.LastName));
+                .ForMember(d => d.LastName,  o => o.MapFrom(s => s.LastName))
+                .ForMember(d => d.ProfileImageUrl, o => o.MapFrom(s => s.ProfileImageUrl));
         }
     }
 }

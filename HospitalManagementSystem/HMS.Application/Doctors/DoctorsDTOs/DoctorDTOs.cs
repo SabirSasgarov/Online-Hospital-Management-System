@@ -18,6 +18,7 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
+        public string? ProfileImageUrl { get; set; }
         public bool IsAvailable { get; set; }
         public bool IsActive { get; set; }
         public List<string> ScheduleDays { get; set; } = [];
@@ -42,6 +43,7 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public string Password { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public string? ProfileImageUrl { get; set; }
         public List<CreateDoctorScheduleDto> Schedules { get; set; } = [];
     }
 
@@ -58,6 +60,7 @@ namespace HMS.Application.Doctors.DoctorsDTOs
         public string LastName { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
+        public string? ProfileImageUrl { get; set; }
     }
 
     public class UpdateDoctorScheduleDto

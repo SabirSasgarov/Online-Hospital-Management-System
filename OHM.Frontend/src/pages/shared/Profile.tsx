@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile, useUpdateProfile, useRequestEmailChange, useConfirmEmailChange } from '@/hooks/useProfile'
 import { authApi } from '@/lib/api/auth'
@@ -16,6 +17,7 @@ interface BasicInfoForm {
   firstName: string
   lastName: string
   phoneNumber: string
+  profileImageUrl: string
 }
 
 interface EmailForm {
@@ -51,9 +53,15 @@ export default function Profile() {
 
   const basicForm = useForm<BasicInfoForm>({
     values: profile
-      ? { firstName: profile.firstName, lastName: profile.lastName, phoneNumber: profile.phoneNumber ?? '' }
+      ? {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phoneNumber: profile.phoneNumber ?? '',
+          profileImageUrl: profile.profileImageUrl ?? '',
+        }
       : undefined,
   })
+  const profileImageUrl = basicForm.watch('profileImageUrl')
 
   const emailForm = useForm<EmailForm>()
   const emailCodeForm = useForm<EmailCodeForm>()
@@ -144,6 +152,10 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <form onSubmit={basicForm.handleSubmit(onSaveBasicInfo)} className="space-y-4">
+              <ImageUpload
+                value={profileImageUrl}
+                onChange={(url) => basicForm.setValue('profileImageUrl', url, { shouldDirty: true })}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>First Name</Label>

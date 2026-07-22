@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, UserCog, Calendar, BedDouble,
   FileText, Pill, TestTube, MessageSquare, BarChart3,
-  ClipboardList, LogOut, Hospital, Activity, X, UserCog2
+  ClipboardList, LogOut, Hospital, Activity, X, UserCog2, Megaphone, Sparkles
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSidebar } from '@/contexts/SidebarContext'
@@ -25,6 +25,8 @@ const navItems: Record<UserRole, NavItem[]> = {
     { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { label: 'Audit Log', href: '/admin/audit', icon: ClipboardList },
     { label: 'Staff Accounts', href: '/admin/staff', icon: UserCog2 },
+    { label: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+    { label: 'Offers', href: '/admin/offers', icon: Sparkles },
   ],
   doctor: [
     { label: 'Dashboard', href: '/doctor', icon: LayoutDashboard },
@@ -81,7 +83,7 @@ export function Sidebar() {
           <Hospital className="h-6 w-6 text-white" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-white">OHM System</p>
+          <p className="text-sm font-bold text-white">CareFlow</p>
           <p className="text-xs text-white/70">{roleLabels[user.role]}</p>
         </div>
         <button

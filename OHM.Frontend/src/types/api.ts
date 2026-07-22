@@ -78,10 +78,13 @@ export interface ProfileDto {
   lastName: string
   email: string
   phoneNumber?: string | null
+  profileImageUrl?: string | null
   emailConfirmed: boolean
   roles: string[]
 }
-export interface UpdateProfileRequest { firstName: string; lastName: string; phoneNumber?: string }
+export interface UpdateProfileRequest {
+  firstName: string; lastName: string; phoneNumber?: string; profileImageUrl?: string
+}
 export interface ChangeEmailRequest { newEmail: string; currentPassword: string }
 export interface ConfirmEmailChangeRequest { code: string }
 
@@ -92,12 +95,61 @@ export interface StaffUserDto {
   firstName: string
   lastName: string
   email: string
+  profileImageUrl?: string | null
   isActive: boolean
   emailConfirmed: boolean
   roles: string[]
 }
 export interface CreateStaffUserRequest {
   firstName: string; lastName: string; email: string; password: string; role: 'Nurse' | 'Admin'
+  profileImageUrl?: string
+}
+
+// ── Announcements (public site + admin CMS) ─────────────────────────────────
+
+export interface AnnouncementDto {
+  id: string
+  title: string
+  summary: string
+  content: string
+  imageUrl?: string | null
+  isPublished: boolean
+  publishedAt?: string | null
+  author: string
+  createdAt: string
+}
+export interface CreateAnnouncementRequest {
+  title: string; summary: string; content: string; imageUrl?: string; isPublished: boolean
+}
+export interface UpdateAnnouncementRequest {
+  title: string; summary: string; content: string; imageUrl?: string; isPublished: boolean
+}
+
+// ── Offers (public "What CareFlow Offers" section + admin CMS) ─────────────
+
+export interface OfferDto {
+  id: string
+  title: string
+  description: string
+  icon: string
+  displayOrder: number
+  isActive: boolean
+}
+export interface CreateOfferRequest {
+  title: string; description: string; icon: string; displayOrder: number; isActive: boolean
+}
+export interface UpdateOfferRequest {
+  title: string; description: string; icon: string; displayOrder: number; isActive: boolean
+}
+
+// ── Public site ──────────────────────────────────────────────────────────────
+
+export interface PublicDoctorDto {
+  id: string
+  fullName: string
+  specialization: string
+  profileImageUrl?: string | null
+  isAvailable: boolean
 }
 
 // ── Patients ────────────────────────────────────────────────────────────
@@ -210,6 +262,7 @@ export interface DoctorSummaryDto {
   email: string
   phone: string
   specialization: string
+  profileImageUrl?: string | null
   isAvailable: boolean
   isActive: boolean
   scheduleDays: string[]
@@ -236,6 +289,7 @@ export interface CreateDoctorRequest {
   password: string
   specialization: string
   phone: string
+  profileImageUrl?: string
   schedules: CreateDoctorScheduleRequest[]
 }
 
@@ -244,6 +298,7 @@ export interface UpdateDoctorRequest {
   lastName: string
   phone: string
   specialization: string
+  profileImageUrl?: string
 }
 
 export interface UpdateDoctorScheduleRequest {

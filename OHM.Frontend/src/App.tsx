@@ -13,6 +13,7 @@ function describeError(error: unknown): string {
   return 'Something went wrong. Please try again.'
 }
 
+import PublicHome from '@/pages/public/Home'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
 import ConfirmEmail from '@/pages/auth/ConfirmEmail'
@@ -27,6 +28,8 @@ import AdminWards from '@/pages/admin/Wards'
 import AdminAnalytics from '@/pages/admin/Analytics'
 import AdminAuditLog from '@/pages/admin/AuditLog'
 import AdminStaff from '@/pages/admin/Staff'
+import AdminAnnouncements from '@/pages/admin/Announcements'
+import AdminOffers from '@/pages/admin/Offers'
 
 import DoctorDashboard from '@/pages/doctor/Dashboard'
 import DoctorPatients from '@/pages/doctor/Patients'
@@ -83,17 +86,18 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
   return <>{children}</>
 }
 
-function RootRedirect() {
+/** Signed-in visitors get bounced to their dashboard; everyone else sees the public marketing page. */
+function RootRoute() {
   const { user, isAuthenticated, isInitializing } = useAuth()
   if (isInitializing) return <FullScreenLoader />
-  if (!isAuthenticated) return <Navigate to="/login" replace />
-  return <Navigate to={roleHomeRoutes[user!.role]} replace />
+  if (isAuthenticated) return <Navigate to={roleHomeRoutes[user!.role]} replace />
+  return <PublicHome />
 }
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
@@ -108,6 +112,8 @@ function AppRoutes() {
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="audit" element={<AdminAuditLog />} />
         <Route path="staff" element={<AdminStaff />} />
+        <Route path="announcements" element={<AdminAnnouncements />} />
+        <Route path="offers" element={<AdminOffers />} />
         <Route path="profile" element={<Profile />} />
       </Route>
 

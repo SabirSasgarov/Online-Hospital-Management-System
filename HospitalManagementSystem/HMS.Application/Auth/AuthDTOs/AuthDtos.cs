@@ -90,6 +90,7 @@
 		public string LastName { get; set; } = string.Empty;
 		public string Email { get; set; } = string.Empty;
 		public string? PhoneNumber { get; set; }
+		public string? ProfileImageUrl { get; set; }
 		public bool EmailConfirmed { get; set; }
 		public IList<string> Roles { get; set; } = [];
 	}
@@ -99,6 +100,7 @@
 		public string FirstName { get; set; } = string.Empty;
 		public string LastName { get; set; } = string.Empty;
 		public string? PhoneNumber { get; set; }
+		public string? ProfileImageUrl { get; set; }
 	}
 
 	public class ChangeEmailRequestDto
@@ -124,6 +126,7 @@
 		public string Password { get; set; } = string.Empty;
 		/// <summary>Must be "Nurse" or "Admin".</summary>
 		public string Role { get; set; } = string.Empty;
+		public string? ProfileImageUrl { get; set; }
 	}
 
 	public class StaffUserDto
@@ -132,6 +135,7 @@
 		public string FirstName { get; set; } = string.Empty;
 		public string LastName { get; set; } = string.Empty;
 		public string Email { get; set; } = string.Empty;
+		public string? ProfileImageUrl { get; set; }
 		public bool IsActive { get; set; }
 		public bool EmailConfirmed { get; set; }
 		public IList<string> Roles { get; set; } = [];

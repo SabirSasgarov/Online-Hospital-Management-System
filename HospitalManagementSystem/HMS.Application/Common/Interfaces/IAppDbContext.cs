@@ -17,6 +17,8 @@ namespace HMS.Application.Common.Interfaces
         DbSet<Message> Messages { get; }
         DbSet<Notification> Notifications { get; }
         DbSet<AuditLog> AuditLogs { get; }
+        DbSet<Announcement> Announcements { get; }
+        DbSet<Offer> Offers { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

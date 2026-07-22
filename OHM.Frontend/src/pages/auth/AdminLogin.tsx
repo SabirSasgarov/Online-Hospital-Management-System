@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { Hospital, ShieldCheck, Eye, EyeOff } from 'lucide-react'
+import { Hospital, ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,7 +36,7 @@ export default function AdminLogin() {
         <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20">
           <Hospital className="h-12 w-12 text-white" />
         </div>
-        <h1 className="mb-4 text-4xl font-bold">OHM System</h1>
+        <h1 className="mb-4 text-4xl font-bold">CareFlow</h1>
         <p className="mb-8 text-center text-lg text-purple-100">Online Hospital Management System</p>
         <div className="grid grid-cols-2 gap-4 text-sm">
           {['Patient Management', 'Doctor Scheduling', 'Ward & Bed Control', 'Analytics & Reports', 'Audit Logging', 'Role-Based Access'].map(f => (
@@ -50,11 +50,15 @@ export default function AdminLogin() {
 
       <div className="flex w-full items-center justify-center bg-gray-50 px-6 lg:w-1/2">
         <div className="w-full max-w-md">
+          <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700">
+            <ArrowLeft className="h-4 w-4" /> Back to Home
+          </Link>
+
           <div className="mb-8 text-center lg:hidden">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-600">
               <Hospital className="h-9 w-9 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">OHM System</h1>
+            <h1 className="text-2xl font-bold text-gray-900">CareFlow</h1>
           </div>
 
           <Card className="shadow-lg">

@@ -141,6 +141,22 @@
 			public const string ViewPatient = "Permissions.Dashboard.ViewPatient";
 		}
 
+		public static class Announcements
+		{
+			public const string View = "Permissions.Announcements.View";
+			public const string Create = "Permissions.Announcements.Create";
+			public const string Edit = "Permissions.Announcements.Edit";
+			public const string Delete = "Permissions.Announcements.Delete";
+		}
+
+		public static class Offers
+		{
+			public const string View = "Permissions.Offers.View";
+			public const string Create = "Permissions.Offers.Create";
+			public const string Edit = "Permissions.Offers.Edit";
+			public const string Delete = "Permissions.Offers.Delete";
+		}
+
 		public static class Analytics
 		{
 			public const string View = "Permissions.Analytics.View";

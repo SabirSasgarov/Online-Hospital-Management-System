@@ -20,6 +20,8 @@
 		public DbSet<Message> Messages => Set<Message>();
 		public DbSet<Notification> Notifications => Set<Notification>();
 		public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+		public DbSet<Announcement> Announcements => Set<Announcement>();
+		public DbSet<Offer> Offers => Set<Offer>();
 
 
 

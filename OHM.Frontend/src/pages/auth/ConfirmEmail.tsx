@@ -65,7 +65,7 @@ export default function ConfirmEmail() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
             <Hospital className="h-9 w-9 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">OHM System</h1>
+          <h1 className="text-2xl font-bold text-gray-900">CareFlow</h1>
         </div>
 
         <Card className="shadow-lg">

@@ -27,6 +27,7 @@ namespace HMS.API.Controllers
 				LastName = user.LastName,
 				Email = user.Email ?? string.Empty,
 				PhoneNumber = user.PhoneNumber,
+				ProfileImageUrl = user.ProfileImageUrl,
 				EmailConfirmed = user.EmailConfirmed,
 				Roles = roles,
 			});
@@ -41,6 +42,7 @@ namespace HMS.API.Controllers
 			user.FirstName = dto.FirstName;
 			user.LastName = dto.LastName;
 			user.PhoneNumber = dto.PhoneNumber;
+			user.ProfileImageUrl = dto.ProfileImageUrl;
 
 			var result = await userManager.UpdateAsync(user);
 			if (!result.Succeeded)
