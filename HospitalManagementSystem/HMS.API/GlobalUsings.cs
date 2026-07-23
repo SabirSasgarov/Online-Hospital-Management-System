@@ -21,3 +21,6 @@ global using HMS.Application;
 global using HMS.Infrastructure;
 global using HMS.Persistence;
 global using HMS.Persistence.Seeds;
+global using Serilog;
+global using Serilog.Events;
+global using HMS.API.Services;

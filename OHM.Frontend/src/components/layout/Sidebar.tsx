@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSidebar } from '@/contexts/SidebarContext'
+import { useProfile } from '@/hooks/useProfile'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
@@ -71,6 +72,8 @@ const roleLabels: Record<UserRole, string> = {
 export function Sidebar() {
   const { user, logout } = useAuth()
   const { close } = useSidebar()
+  const { data: profile } = useProfile()
+
   if (!user) return null
 
   const items = navItems[user.role]
@@ -97,9 +100,13 @@ export function Sidebar() {
 
       <NavLink to={`/${user.role}/profile`} className="block border-b border-gray-100 p-4 hover:bg-gray-50 transition-colors">
         <div className="flex items-center gap-3">
-          <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white', color)}>
-            {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-          </div>
+          {profile?.profileImageUrl ? (
+            <img src={profile.profileImageUrl} alt={user.name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          ) : (
+            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white', color)}>
+              {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-gray-900">{user.name}</p>
             <p className="truncate text-xs text-gray-500">{user.email}</p>

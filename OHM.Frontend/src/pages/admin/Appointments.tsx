@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Plus, Search, AlertCircle } from 'lucide-react'
+import { Plus, Search, AlertCircle, BellRing } from 'lucide-react'
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender, type ColumnDef } from '@tanstack/react-table'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAppointments, useCreateAppointment, useChangeAppointmentStatus, type AppointmentFormInput } from '@/hooks/useAppointments'
 import { usePatients } from '@/hooks/usePatients'
 import { useDoctors } from '@/hooks/useDoctors'
+import { useRunAppointmentReminders } from '@/hooks/useAppointmentReminders'
 import { ApiError } from '@/lib/apiClient'
 import type { Appointment } from '@/types'
 
@@ -43,6 +44,7 @@ export default function AdminAppointments() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [conflict, setConflict] = useState('')
+  const [reminderNotice, setReminderNotice] = useState('')
   const { register, handleSubmit, reset, setValue } = useForm<FormValues>()
 
   const { data, isLoading } = useAppointments({ pageSize: 200 })
@@ -50,6 +52,7 @@ export default function AdminAppointments() {
   const { data: doctorsData } = useDoctors({ pageSize: 200 })
   const createAppointment = useCreateAppointment()
   const changeStatus = useChangeAppointmentStatus()
+  const runReminders = useRunAppointmentReminders()
 
   const appointments = data?.appointments ?? []
   const patients = patientsData?.patients ?? []
@@ -99,14 +102,35 @@ export default function AdminAppointments() {
     }
   }
 
+  const sendReminders = async () => {
+    setReminderNotice('')
+    try {
+      const res = await runReminders.mutateAsync()
+      setReminderNotice(res.message ?? 'Reminders sent.')
+    } catch (err) {
+      setReminderNotice(err instanceof ApiError ? err.message : 'Could not send reminders.')
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Appointments"
         description="Book and manage appointments with conflict detection"
-        action={<Button onClick={() => { setShowAdd(true); setConflict('') }}><Plus className="h-4 w-4" /> Book Appointment</Button>}
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={sendReminders} disabled={runReminders.isPending}>
+              <BellRing className="h-4 w-4" />
+              {runReminders.isPending ? 'Sending…' : 'Send Reminders Now'}
+            </Button>
+            <Button onClick={() => { setShowAdd(true); setConflict('') }}><Plus className="h-4 w-4" /> Book Appointment</Button>
+          </div>
+        }
       />
       <div className="p-6">
+        {reminderNotice && (
+          <div className="mb-4 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700">{reminderNotice}</div>
+        )}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">

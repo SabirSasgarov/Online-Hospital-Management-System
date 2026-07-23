@@ -15,5 +15,11 @@ namespace HMS.Domain.Entities
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
 
         public string? Notes { get; set; }
+
+        /// <summary>
+        /// Set once a reminder email has been sent for this appointment (automatically ~1 day
+        /// ahead, or manually by a nurse/admin) so the same appointment is never reminded twice.
+        /// </summary>
+        public DateTime? ReminderSentAt { get; set; }
     }
 }

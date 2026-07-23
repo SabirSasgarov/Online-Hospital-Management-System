@@ -1,17 +1,20 @@
 import { useRef, useState } from 'react'
-import { UserRound, Loader2 } from 'lucide-react'
+import { UserRound, ImageIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { uploadImage } from '@/lib/api/upload'
 import { ApiError } from '@/lib/apiClient'
+import { cn } from '@/lib/utils'
 
 interface ImageUploadProps {
   value?: string
   onChange: (url: string) => void
   label?: string
+  /** "round" (default) for avatar-style photos, "wide" for banner/card images like announcements. */
+  shape?: 'round' | 'wide'
 }
 
-/** A small circular preview + "Choose Photo" button that uploads the picked file and reports back the hosted URL. */
-export function ImageUpload({ value, onChange, label = 'Profile Photo (optional)' }: ImageUploadProps) {
+/** A small preview + "Choose Photo" button that uploads the picked file and reports back the hosted URL. */
+export function ImageUpload({ value, onChange, label = 'Profile Photo (optional)', shape = 'round' }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -32,15 +35,17 @@ export function ImageUpload({ value, onChange, label = 'Profile Photo (optional)
     }
   }
 
+  const previewClass = shape === 'wide' ? 'h-16 w-28 rounded-lg' : 'h-16 w-16 rounded-full'
+
   return (
     <div className="space-y-1.5">
       {label && <p className="text-sm font-medium text-gray-700">{label}</p>}
       <div className="flex items-center gap-4">
         {value ? (
-          <img src={value} alt="Preview" className="h-16 w-16 rounded-full object-cover border border-gray-200" />
+          <img src={value} alt="Preview" className={cn(previewClass, 'object-cover border border-gray-200')} />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-            <UserRound className="h-7 w-7" />
+          <div className={cn(previewClass, 'flex items-center justify-center bg-gray-100 text-gray-400')}>
+            {shape === 'wide' ? <ImageIcon className="h-6 w-6" /> : <UserRound className="h-7 w-7" />}
           </div>
         )}
         <div className="space-y-1">

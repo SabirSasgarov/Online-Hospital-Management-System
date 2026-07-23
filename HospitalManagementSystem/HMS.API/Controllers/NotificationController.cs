@@ -53,5 +53,16 @@ namespace HMS.API.Controllers
             await sender.Send(new DeleteNotificationCommand(id, CurrentUserId), ct);
             return NoContent();
         }
+
+        // POST /api/notification/run-appointment-reminders — manually sweep for appointments
+        // ~1 day out and email reminders now, instead of waiting for the hourly background job.
+        // Available to nurses/admins so they can send a batch on demand.
+        [HttpPost("run-appointment-reminders")]
+        [HasPermission(Permissions.Notifications.RunAppointmentReminders)]
+        public async Task<IActionResult> RunAppointmentReminders(CancellationToken ct)
+        {
+            var sentCount = await sender.Send(new SendAppointmentRemindersCommand(), ct);
+            return Ok(Result<int>.Success(sentCount, $"{sentCount} reminder email(s) sent."));
+        }
     }
 }

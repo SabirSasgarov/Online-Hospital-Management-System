@@ -1,5 +1,5 @@
 import { api } from '../apiClient'
-import type { ApiNotificationType, NotificationDto, PaginatedResult } from '@/types/api'
+import type { ApiNotificationType, NotificationDto, PaginatedResult, Result } from '@/types/api'
 
 export interface ListNotificationsParams {
   isRead?: boolean
@@ -14,4 +14,6 @@ export const notificationsApi = {
   markAsRead: (id: string) => api.patch<void>(`/notification/${id}/read`),
   markAllAsRead: () => api.patch<void>('/notification/read-all'),
   remove: (id: string) => api.delete<void>(`/notification/${id}`),
+  /** Manually sweeps for appointments ~1 day out and emails reminders now (nurse/admin only). */
+  runAppointmentReminders: () => api.post<Result<number>>('/notification/run-appointment-reminders'),
 }

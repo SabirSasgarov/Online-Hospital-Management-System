@@ -2,19 +2,19 @@ namespace HMS.API.Controllers
 {
 	/// <summary>
 	/// Generic image upload endpoint used for profile photos (doctors, nurses, admins, patients)
-	/// and any other place that needs a hosted image URL. Files are stored under wwwroot/uploads
-	/// and served back as static files.
+	/// and any other place that needs a hosted image URL. Files are uploaded to Azure Blob Storage
+	/// and the public blob URL is returned.
 	/// </summary>
 	[Authorize]
-	public class UploadController : BaseApiController
+	public class UploadController(IBlobStorageService blobStorage) : BaseApiController
 	{
 		private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 		private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-		private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
+		private const long MaxFileSizeBytes = 5 * 1024 * 1024;
 
 		[HttpPost("image")]
 		[RequestSizeLimit(MaxFileSizeBytes)]
-		public async Task<IActionResult> UploadImage(IFormFile? file)
+		public async Task<IActionResult> UploadImage(IFormFile? file, CancellationToken ct)
 		{
 			if (file is null || file.Length == 0)
 				return BadRequest(Result.Failure("No file was uploaded."));
@@ -26,18 +26,9 @@ namespace HMS.API.Controllers
 			if (!AllowedExtensions.Contains(extension) || !AllowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
 				return BadRequest(Result.Failure("Unsupported file type. Please upload a JPG, PNG, GIF, or WEBP image."));
 
-			var uploadsRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads");
-			Directory.CreateDirectory(uploadsRoot);
+			await using var stream = file.OpenReadStream();
+			var url = await blobStorage.UploadAsync(stream, file.FileName, file.ContentType, ct);
 
-			var fileName = $"{Guid.NewGuid()}{extension}";
-			var filePath = Path.Combine(uploadsRoot, fileName);
-
-			await using (var stream = new FileStream(filePath, FileMode.Create))
-			{
-				await file.CopyToAsync(stream);
-			}
-
-			var url = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
 			return Ok(Result<string>.Success(url, "File uploaded."));
 		}
 	}

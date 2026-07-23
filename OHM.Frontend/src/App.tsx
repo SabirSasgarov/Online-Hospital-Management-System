@@ -17,6 +17,8 @@ import PublicHome from '@/pages/public/Home'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
 import ConfirmEmail from '@/pages/auth/ConfirmEmail'
+import ForgotPassword from '@/pages/auth/ForgotPassword'
+import ResetPassword from '@/pages/auth/ResetPassword'
 import AdminLogin from '@/pages/auth/AdminLogin'
 import Profile from '@/pages/shared/Profile'
 
@@ -101,6 +103,8 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/confirm-email" element={<ConfirmEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/admin-login" element={<AdminLogin />} />
 
       <Route path="/admin" element={<ProtectedRoute allowedRole="admin"><AppLayout /></ProtectedRoute>}>

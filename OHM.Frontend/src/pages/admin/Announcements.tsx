@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { ImageUpload } from '@/components/ui/image-upload'
 import {
   useAnnouncements, useCreateAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement,
 } from '@/hooks/useAnnouncements'
@@ -41,6 +42,7 @@ export default function AdminAnnouncements() {
     defaultValues: emptyForm,
   })
   const isPublished = watch('isPublished')
+  const imageUrl = watch('imageUrl')
 
   const openNew = () => {
     setEditing(null)
@@ -150,10 +152,12 @@ export default function AdminAnnouncements() {
               <Textarea rows={6} {...register('content', { required: 'Content is required' })} placeholder="Full announcement text" />
               {errors.content && <p className="text-xs text-red-500">{errors.content.message}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label>Image URL (optional)</Label>
-              <Input {...register('imageUrl')} placeholder="https://..." />
-            </div>
+            <ImageUpload
+              label="Announcement Image (optional)"
+              shape="wide"
+              value={imageUrl}
+              onChange={(url) => setValue('imageUrl', url, { shouldDirty: true })}
+            />
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
                 type="checkbox"

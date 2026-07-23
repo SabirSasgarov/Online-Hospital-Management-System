@@ -94,7 +94,8 @@
 				Permissions.LabResults.Edit,
 
 				Permissions.Notifications.View,
-				Permissions.Notifications.MarkAsRead
+				Permissions.Notifications.MarkAsRead,
+				Permissions.Notifications.RunAppointmentReminders
 				]);
 
 				await AddPermissionsToRoleAsync(roleManager, Roles.Patient,
