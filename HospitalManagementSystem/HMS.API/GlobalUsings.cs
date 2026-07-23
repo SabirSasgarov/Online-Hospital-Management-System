@@ -24,3 +24,5 @@ global using HMS.Persistence.Seeds;
 global using Serilog;
 global using Serilog.Events;
 global using HMS.API.Services;
+global using HMS.API.Hubs;
+global using Microsoft.AspNetCore.SignalR;

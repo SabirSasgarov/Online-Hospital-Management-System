@@ -106,6 +106,19 @@ namespace HMS.API
 				// Return standardized Result wrapper for auth failures
 				options.Events = new JwtBearerEvents
 				{
+					// Browsers can't set an Authorization header on the WebSocket upgrade request the
+					// SignalR client makes, so it sends the token as ?access_token=... instead — only
+					// honor that for the chat hub path, never for normal REST endpoints.
+					OnMessageReceived = context =>
+					{
+						var accessToken = context.Request.Query["access_token"];
+						if (!string.IsNullOrEmpty(accessToken) &&
+							context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat"))
+						{
+							context.Token = accessToken;
+						}
+						return Task.CompletedTask;
+					},
 					OnChallenge = async context =>
 					{
 						context.HandleResponse();

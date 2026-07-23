@@ -44,7 +44,8 @@ builder.Services.AddCors(options =>
 		{
 			policy.WithOrigins(allowedOrigins)
 				  .AllowAnyMethod()
-				  .AllowAnyHeader();
+				  .AllowAnyHeader()
+				  .AllowCredentials(); // required for the SignalR chat hub's websocket/negotiate requests
 		}
 		else
 		{
@@ -52,7 +53,8 @@ builder.Services.AddCors(options =>
 			// always be set explicitly via Cors:AllowedOrigins in appsettings for real deployments.
 			policy.WithOrigins("http://localhost:5173", "http://localhost:5000")
 				  .AllowAnyMethod()
-				  .AllowAnyHeader();
+				  .AllowAnyHeader()
+				  .AllowCredentials();
 		}
 	});
 });
@@ -66,6 +68,10 @@ builder.Services
 // Automatically emails patients ~1 day before their appointment (also triggerable on demand by
 // nurses/admins via POST /api/notification/run-appointment-reminders).
 builder.Services.AddHostedService<AppointmentReminderBackgroundService>();
+
+// Real-time chat: messages/read-receipts are pushed over the hub instead of the frontend polling.
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IChatNotifier, SignalRChatNotifier>();
 
 var app = builder.Build();
 
@@ -93,6 +99,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 try
 {

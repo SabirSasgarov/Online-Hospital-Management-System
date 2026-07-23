@@ -1,18 +1,47 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { messagesApi, type ListMessagesParams } from '@/lib/api/messages'
 import { mapMessage } from '@/lib/adapters'
+import { ensureChatConnected } from '@/lib/signalrClient'
+
+/** Subscribes the shared SignalR chat hub connection to refresh the messages cache the instant
+ *  the backend pushes a "ReceiveMessage" or "MessageRead" event — replaces the old 5s polling. */
+function useChatRealtimeInvalidation() {
+  const qc = useQueryClient()
+
+  useEffect(() => {
+    let cancelled = false
+    let activeConn: Awaited<ReturnType<typeof ensureChatConnected>> = null
+    const invalidate = () => qc.invalidateQueries({ queryKey: ['messages'] })
+
+    ensureChatConnected().then((conn) => {
+      if (cancelled || !conn) return
+      activeConn = conn
+      conn.on('ReceiveMessage', invalidate)
+      conn.on('MessageRead', invalidate)
+    })
+
+    return () => {
+      cancelled = true
+      activeConn?.off('ReceiveMessage', invalidate)
+      activeConn?.off('MessageRead', invalidate)
+    }
+  }, [qc])
+}
 
 export function useMessages(params: ListMessagesParams = {}) {
+  useChatRealtimeInvalidation()
+
   return useQuery({
     queryKey: ['messages', params],
     queryFn: async () => {
       const res = await messagesApi.list(params)
       return res.items.map(mapMessage)
     },
-    // Messaging pages poll so both sides see new messages / read-receipts without a manual refresh.
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
+    // Real-time push (see useChatRealtimeInvalidation) handles instant updates; this is just a
+    // safety net in case a push is missed (reconnect gap, etc).
     refetchOnWindowFocus: true,
+    staleTime: 30_000,
   })
 }
 

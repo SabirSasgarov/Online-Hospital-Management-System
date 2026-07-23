@@ -5,6 +5,7 @@ import { doctorsApi } from '@/lib/api/doctors'
 import { patientsApi } from '@/lib/api/patients'
 import { ApiError } from '@/lib/apiClient'
 import { clearTokens, getAccessToken, setTokens } from '@/lib/tokenStorage'
+import { stopChatConnection } from '@/lib/signalrClient'
 import { decodeJwtPayload, extractPermissions } from '@/lib/jwt'
 
 export interface AuthResult {
@@ -107,7 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const onExpired = () => setUser(null)
+    const onExpired = () => {
+      stopChatConnection()
+      setUser(null)
+    }
     window.addEventListener('ohm:session-expired', onExpired)
     return () => window.removeEventListener('ohm:session-expired', onExpired)
   }, [])
@@ -181,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authApi.logout().catch(() => {})
     clearTokens()
+    stopChatConnection()
     setUser(null)
   }
 
