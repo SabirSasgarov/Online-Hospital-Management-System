@@ -44,6 +44,7 @@ App_Data/
 # Secrets / sensitive
 appsettings.Development.json
 appsettings.Local.json
+appsettings.json
 *.pfx
 *.p12
 
